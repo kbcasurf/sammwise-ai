@@ -120,6 +120,29 @@ footer {
   font-family: "Armata";
 }
 
+.flexWrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.flexBoxFull {
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.flexBoxHalf {
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 40em) {
+  .flexBoxHalf {
+    width: 50%;
+  }
+}
+
 
 .chart_container {
   float: left;

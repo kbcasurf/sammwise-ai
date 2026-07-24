@@ -17,7 +17,6 @@
     "react-dropzone": "^11.3.2",
     "react-gauge-chart": "^0.3.0",
     "react-to-print": "^2.12.6",
-    "reflexbox": "^4.0.6",
     "survey-react": "^1.8.48"
   },
   "devDependencies": {
