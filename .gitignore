@@ -102,3 +102,6 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Claude Code / Superpowers local specs and plans (not tracked in repo history)
+docs/superpowers/
