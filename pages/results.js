@@ -3,7 +3,7 @@ import {Radar, Doughnut, Bar} from 'react-chartjs-2';
 import GaugeChart from 'react-gauge-chart'
 import React, {useState,useEffect, useRef} from 'react';
 import Head from 'next/head'
-import ReactToPrint, {PrintContextConsumer} from 'react-to-print';
+import { useReactToPrint } from 'react-to-print';
 import {useRouter} from 'next/router'
 
 //local imports
@@ -68,7 +68,8 @@ const results = () => {
     const[display,setDisplay] = useState(0)
     const[showPrevious, setShowPrevious] = useState(false)
     const componentRef = useRef();
-    const reducer = (prevValue, currValue) => prevValue + currValue;   
+    const handlePrint = useReactToPrint({ contentRef: componentRef });
+    const reducer = (prevValue, currValue) => prevValue + currValue;
     function reloadPage(){
         location.reload();
     }
@@ -304,10 +305,7 @@ const results = () => {
             
             <div>
                 <h2 className='jsonDownload'> Do you wish to print or save the graphs as a pdf?</h2>
-                    <ReactToPrint 
-                    trigger={() => <button className='btn'>Export graphs</button>}
-                    content={()=>  componentRef.current}
-                    />
+                    <button className='btn' onClick={() => handlePrint()}>Export graphs</button>
             </div>
             
             

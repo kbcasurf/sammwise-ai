@@ -14,9 +14,9 @@
     "react-advanced-gauge-chart": "^0.2.7",
     "react-chartjs-2": "^3.0.3",
     "react-dom": "^16.14.0",
-    "react-dropzone": "^11.3.2",
-    "react-gauge-chart": "^0.3.0",
-    "react-to-print": "^2.12.6",
+    "react-dropzone": "^14.4.1",
+    "react-gauge-chart": "^0.5.1",
+    "react-to-print": "^3.3.0",
     "survey-react": "^1.8.48"
   },
   "devDependencies": {
