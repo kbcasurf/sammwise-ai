@@ -15,7 +15,7 @@ test('save responses to file and reload via upload restores answers', async ({ p
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Save Responses' }).click();
   const download = await downloadPromise;
-  // Save the download to a temp file with .json extension
+  // saveAs() with explicit .json ensures the app's upload validation (comps/inputfile.js:35) accepts the file
   const filePath = path.join(os.tmpdir(), 'test-responses.json');
   await download.saveAs(filePath);
   expect(filePath).toBeTruthy();
