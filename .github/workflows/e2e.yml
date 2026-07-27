@@ -1,0 +1,20 @@
+# .github/workflows/e2e.yml
+name: E2E tests
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Still Next 10 / React 16 until Stage 4 — Node 16 avoids the
+          # OpenSSL 3.x/webpack MD4 crash that Node 17+ hits on `next build`.
+          node-version: '16'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
