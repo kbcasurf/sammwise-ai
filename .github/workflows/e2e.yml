@@ -7,7 +7,11 @@ on:
 
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    # Pinned to 22.04 (Jammy): Playwright is pinned to 1.44.1 for Node 16
+    # compatibility (see package.json), and that version's `--with-deps`
+    # OS package list predates Ubuntu 24.04's libasound2 -> libasound2t64
+    # rename. Revisit both pins together once Stage 4/5 lands.
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
