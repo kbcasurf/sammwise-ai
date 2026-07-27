@@ -21,7 +21,7 @@
     "survey-react": "^1.8.48"
   },
   "devDependencies": {
-    "@playwright/test": "1.44.1",
+    "@playwright/test": "^1.62.0",
     "@types/react-gauge-chart": "^0.3.0",
     "style-loader": "^2.0.0"
   }

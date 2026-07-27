@@ -7,18 +7,18 @@ on:
 
 jobs:
   e2e:
-    # Pinned to 22.04 (Jammy): Playwright is pinned to 1.44.1 for Node 16
-    # compatibility (see package.json), and that version's `--with-deps`
-    # OS package list predates Ubuntu 24.04's libasound2 -> libasound2t64
-    # rename. Revisit both pins together once Stage 4/5 lands.
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          # Still Next 10 / React 16 until Stage 4 — Node 16 avoids the
-          # OpenSSL 3.x/webpack MD4 crash that Node 17+ hits on `next build`.
-          node-version: '16'
+          # Still Next 10 / React 16 until Stage 4, but Node itself is >=20
+          # here (not pinned to 16) — the OpenSSL 3.x/webpack MD4 workaround
+          # for `next build` is the NODE_OPTIONS flag in playwright.config.js's
+          # webServer.env, which needs Node 17+ to exist at all. This matches
+          # what already works in local dev (Node 24) and lets CI run the
+          # latest @playwright/test, which itself requires Node >=20.
+          node-version: '20'
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
