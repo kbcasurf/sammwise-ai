@@ -5,7 +5,6 @@
 import React, {useState, useEffect, useRef} from 'react';
 import 'survey-react/survey.css';
 import * as Survey from 'survey-react';
-import { Flex, Box } from 'reflexbox'
 import assert, { strictEqual } from 'assert';
 //local imports
 import Json from  '../surveys/totalsurvey';

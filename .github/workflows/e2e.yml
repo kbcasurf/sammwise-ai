@@ -1,0 +1,24 @@
+# .github/workflows/e2e.yml
+name: E2E tests
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Still Next 10 / React 16 until Stage 4, but Node itself is >=20
+          # here (not pinned to 16) — the OpenSSL 3.x/webpack MD4 workaround
+          # for `next build` is the NODE_OPTIONS flag in playwright.config.js's
+          # webServer.env, which needs Node 17+ to exist at all. This matches
+          # what already works in local dev (Node 24) and lets CI run the
+          # latest @playwright/test, which itself requires Node >=20.
+          node-version: '20'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
