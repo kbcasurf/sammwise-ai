@@ -17,11 +17,6 @@ module.exports = defineConfig({
     url: 'http://127.0.0.1:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
-    // Node 17+ breaks `next build` on Next 10's bundled webpack (OpenSSL 3.x vs
-    // the MD4 hash it uses) until Stage 4 lands. Drop this once Next is upgraded.
-    env: {
-      NODE_OPTIONS: '--openssl-legacy-provider',
-    },
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
