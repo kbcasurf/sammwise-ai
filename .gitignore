@@ -102,3 +102,11 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Playwright E2E test artifacts
+playwright-report/
+test-results/
+.playwright-mcp/
+
+# Superpowers specs/plans (local only)
+.superpowers/

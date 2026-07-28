@@ -3,14 +3,10 @@
 //TODO: make the panels buttons part of an outside function
 
 import React, {useState, useEffect, useRef} from 'react';
-// Package-subpath import ('survey-core/survey-core.css') fails: Next 10's
-// bundled webpack can't resolve survey-core's wildcard exports pattern
-// ("./*.css": "./*.css"). Reach into node_modules directly until Stage 4's
-// webpack upgrade fixes exports-map resolution.
-import '../../node_modules/survey-core/survey-core.css';
+// Idiomatic package-subpath import resolves fine as of Next 16 / survey-core 2.5.x.
+import 'survey-core/survey-core.css';
 import { Model } from 'survey-core';
 import { Survey } from 'survey-react-ui';
-import assert, { strictEqual } from 'assert';
 //local imports
 import Json from  '../surveys/totalsurvey';
 import InputFile from '../inputfile';

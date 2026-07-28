@@ -16,7 +16,6 @@
     "lodash": "^4.18.1",
     "next": "16.2.11",
     "react": "19.2.8",
-    "react-advanced-gauge-chart": "^0.2.7",
     "react-chartjs-2": "^3.0.3",
     "react-dom": "19.2.8",
     "react-dropzone": "^14.4.1",
@@ -25,8 +24,8 @@
     "survey-core": "^2.5.35",
     "survey-react-ui": "^2.5.35"
   },
-  "//lodash": "lodash is not imported by this app directly. react-gauge-chart@0.5.1 does require('lodash/isEqual') but omits lodash from its own dependencies; Next 10's dependency tree used to supply it transitively and Next 16's does not, so /results fails to build without it. Do not remove it as an unused dependency.",
-  "//overrides": "These three chart libraries declare React peer ranges that stop at 16/17/18 and have no React 19-compatible release (react-gauge-chart@0.5.1 is its latest). None of them uses React's function-component defaultProps or any other API React 19 removed, so the incompatibility is in the declared range only. Overriding the peers (rather than setting legacy-peer-deps project-wide) keeps `npm ci` strict for every other dependency.",
+  "//lodash": "lodash is not imported by this app directly. react-gauge-chart@0.5.1 does require('lodash/isEqual') but omits lodash from its own dependencies. Next 10's dependency tree supplied it by accident via react-chartjs-2@3.0.3's own transitive deps (dropped when react-chartjs-2 was bumped to 3.3.0 in this same task); Next 16's tree does not, so /results fails to build without it. Do not remove it as an unused dependency.",
+  "//overrides": "These two chart libraries declare React peer ranges that stop at 16/17/18 (react-gauge-chart@0.5.1 is its latest release, and react-chartjs-2@3.0.3 is pinned below its 5.3.1 release because upgrading further would require an out-of-scope chart.js 3->4 major bump). Neither uses React's function-component defaultProps or any other API React 19 removed, so the incompatibility is in the declared range only. Overriding the peers (rather than setting legacy-peer-deps project-wide) keeps `npm ci` strict for every other dependency.",
   "overrides": {
     "react-chartjs-2": {
       "react": "$react"
@@ -34,15 +33,9 @@
     "react-gauge-chart": {
       "react": "$react",
       "react-dom": "$react-dom"
-    },
-    "react-advanced-gauge-chart": {
-      "react": "$react",
-      "react-dom": "$react-dom"
     }
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.0",
-    "@types/react-gauge-chart": "^0.3.0",
-    "style-loader": "^2.0.0"
+    "@playwright/test": "^1.62.0"
   }
 }
