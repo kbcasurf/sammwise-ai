@@ -116,8 +116,8 @@ footer {
   margin-bottom: 5px;
 }
 
-.sv_main{
-  font-family: "Armata";
+.sd-root-modern{
+  font-family: "Armata" !important;
 }
 
 .flexWrap {

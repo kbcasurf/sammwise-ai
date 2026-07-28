@@ -213,6 +213,7 @@ const Mysurvey = (prop) => {
     var panels= [];
     var curr_panel_names = [];
     var panelStateMap = new Map()
+    var panelElementMap = new Map()
     var all_pages = survey.pages;
     var page_names = [];
     
@@ -263,7 +264,8 @@ const Mysurvey = (prop) => {
 
     survey.onAfterRenderPanel.add(function(survey, options){
         var rendered_panel = options.panel.name;
-        
+        panelElementMap.set(rendered_panel, options.htmlElement);
+
         var index = curr_panel_names.indexOf(rendered_panel);
         var firstRender = false;
         var currentPanel = panels[index];
@@ -279,20 +281,12 @@ const Mysurvey = (prop) => {
         }
 
         function panelScroll(targetPanelName){
-            var hTags = document.getElementsByTagName("h4");
-            
-            var found;
-
-            for(var i=0; i < hTags.length; i++){
-                if (hTags[i].textContent == targetPanelName){
-                    found = hTags[i];
-                    break;
-                }
+            var target = panelElementMap.get(targetPanelName);
+            if (target){
+                target.scrollIntoView({
+                    behavior: "smooth"
+                });
             }
-            
-            found.scrollIntoView({
-                behavior: "smooth"
-            });
         }
 
         function isFirstPanel(index){
@@ -317,10 +311,8 @@ const Mysurvey = (prop) => {
             btn.className = "btn btn-info btn-xs";
             btn.id = btnID;
             btn.innerHTML = button_type;
-            // Insert buttons into html document   
-            var header = options.htmlElement.querySelector("h4");
-            // if (!header)
-            header = options.htmlElement;
+            // Insert buttons into html document
+            var header = options.htmlElement;
             var span = document.createElement("span");
             span.id = rendered_panel+"panel";
             span.class = 'span';
