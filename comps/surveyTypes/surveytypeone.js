@@ -3,8 +3,13 @@
 //TODO: make the panels buttons part of an outside function
 
 import React, {useState, useEffect, useRef} from 'react';
-import 'survey-react/survey.css';
-import * as Survey from 'survey-react';
+// Package-subpath import ('survey-core/survey-core.css') fails: Next 10's
+// bundled webpack can't resolve survey-core's wildcard exports pattern
+// ("./*.css": "./*.css"). Reach into node_modules directly until Stage 4's
+// webpack upgrade fixes exports-map resolution.
+import '../../node_modules/survey-core/survey-core.css';
+import { Model } from 'survey-core';
+import { Survey } from 'survey-react-ui';
 import assert, { strictEqual } from 'assert';
 //local imports
 import Json from  '../surveys/totalsurvey';
@@ -18,7 +23,7 @@ import question_desc from '../surveys/question_desc';
 // import saveText from '../saveResponses';
 
 
-const survey = new Survey.Model(Json());
+const survey = new Model(Json());
 var isDropDownButtonClicked = false;
 
 function formatDate(date) {
@@ -488,7 +493,7 @@ const Mysurvey = (prop) => {
             
                     
             <SurveyNav button = {pageState} onClick = {value => changePage(value)}/>
-            <Survey.Survey  showCompletedPage={false}
+            <Survey  showCompletedPage={false}
                 onComplete = {data => prop.showCompletedPage(data.valuesHash)}
                 model = {surveyState} 
                 />
