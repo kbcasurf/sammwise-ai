@@ -59,7 +59,16 @@ function saveText(text, filename){
     a.click()
 }
 
-
+// react-chartjs-2 decides whether to push new numbers into the Chart.js instance by
+// comparing the *reference* of data.datasets between renders. Mutating
+// graphObj.metaData.datasets[dataNum].data in place (the old pattern here) never
+// changes that reference, so the chart silently keeps rendering its initial (empty)
+// data. Reassigning the datasets array forces react-chartjs-2 to detect the change.
+function setDatasetData(graphObj, dataNum, data) {
+  graphObj.metaData.datasets = graphObj.metaData.datasets.map((d, i) =>
+    i === dataNum ? { ...d, data } : d
+  );
+}
 
 const results = () => {
 
@@ -131,15 +140,15 @@ const results = () => {
                         
                         bussFuncRadar.metaData.labels = testCalc.businessFunctionNames;
                         bussFuncBarGraph.metaData.labels = testCalc.businessFunctionNames;
-                        
-                        bussFuncRadar.metaData.datasets[dataNum].data = testCalc.businessFunctionScores;
-                        bussFuncBarGraph.metaData.datasets[dataNum].data = testCalc.businessFunctionScores;
+
+                        setDatasetData(bussFuncRadar, dataNum, testCalc.businessFunctionScores);
+                        setDatasetData(bussFuncBarGraph, dataNum, testCalc.businessFunctionScores);
                         
                         
                         practiceRadar.metaData.labels = testCalc.practiceNames;
                         practiceBarGraph.metaData.labels = testCalc.practiceNames;
-                        practiceRadar.metaData.datasets[dataNum].data = testCalc.practiceScores;
-                        practiceBarGraph.metaData.datasets[dataNum].data = testCalc.practiceScores;
+                        setDatasetData(practiceRadar, dataNum, testCalc.practiceScores);
+                        setDatasetData(practiceBarGraph, dataNum, testCalc.practiceScores);
 
                         // for (let i = 0; i < 5; i++) {
                            
@@ -204,9 +213,8 @@ const results = () => {
                         console.log(testCalc.responseCount);
                         var totalsCount = [ testCalc.responseCount["No"],testCalc.responseCount["Yes, for some"], testCalc.responseCount["Yes, for most"], testCalc.responseCount["Yes, for all"]];
 
-                        
-                        totalsBarGraph.metaData.datasets[dataNum].data = []
-                        totalsBarGraph.metaData.datasets[dataNum].data = totalsCount;
+
+                        setDatasetData(totalsBarGraph, dataNum, totalsCount);
                         
                         //Pushing to the Graph
                            
