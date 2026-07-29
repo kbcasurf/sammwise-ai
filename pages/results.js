@@ -87,7 +87,9 @@ const results = () => {
                 answer_values.push(assessmentSessionStateData[key]);
             }
             var answer_sum = answer_values.reduce(reducer);
-            var userStateUpdate = JSON.parse(sessionStorage.getItem('userState'));
+            // Direct navigation to /results (deep link, bookmark, fresh tab) skips
+            // the Home page, which is what normally seeds sessionStorage's userState.
+            var userStateUpdate = JSON.parse(sessionStorage.getItem('userState')) || {};
             userStateUpdate['page'] = 'resultsPage';
             userStateUpdate['has_switched_page'] = true;
             sessionStorage.setItem('userState', JSON.stringify(userStateUpdate));

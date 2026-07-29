@@ -48,6 +48,16 @@ function formatDate(date) {
     return [year, month, day,hours,minutes,seconds].join('');
   }
 
+// Appends cls to a space-separated class list only if not already present.
+// survey-core reuses the same cssClasses object across re-renders, so plain
+// `+=` concatenation (the previous approach) grew the class string unbounded.
+function addClassOnce(current, cls) {
+    var tokens = (current || "").split(" ").filter(Boolean);
+    if (tokens.indexOf(cls) === -1) {
+        tokens.push(cls);
+    }
+    return tokens.join(" ");
+}
 
 const Mysurvey = (prop) => {
     
@@ -59,13 +69,20 @@ const Mysurvey = (prop) => {
     const [dropDownState, setDropDownState] = useState(false);
     const [isDetailsPage, setDetailsPage] = useState(false);
     const [reloadSurvey, setReloadSurvey] = useState(false);
-    
+
+    // pageState mirror: the effect below only depends on [display], so its
+    // closure would otherwise see a stale pageState from whenever it last ran.
+    const pageStateRef = useRef(pageState);
+    useEffect(() => { pageStateRef.current = pageState; }, [pageState]);
+
     //Use Effect for populating the Survey with predefined answerd from a file or from previously answered survey
     useEffect(() => {
         
         var loadedResults = JSON.parse(sessionStorage.getItem('loadedResults'));
         var assessmentState = JSON.parse(sessionStorage.getItem('assessmentState'))
-        var userState = JSON.parse(sessionStorage.getItem('userState'));
+        // Direct navigation to /assessment (deep link, bookmark, fresh tab) skips
+        // the Home page, which is what normally seeds sessionStorage's userState.
+        var userState = JSON.parse(sessionStorage.getItem('userState')) || {};
         userState['page'] = 'assessmentPage';
         userState['has_switched_page'] = false;
 
@@ -92,11 +109,11 @@ const Mysurvey = (prop) => {
         var navbar = sessionStorage.getItem('navbarState');
         
         
-        if(pageState != navbar){
+        if(pageStateRef.current != navbar){
             changePage(navbar);
         }
         
-        var userStateData = JSON.parse(sessionStorage.getItem('userState'));
+        var userStateData = JSON.parse(sessionStorage.getItem('userState')) || {};
         if(navbar == "Details"){
             setDetailsPage(true);
         }
@@ -151,7 +168,7 @@ const Mysurvey = (prop) => {
 
     // Function that changes page and sets the state of buttons on the navbar
     function changePage(pageName){
-        
+
         if(pageName != "next"){
             survey.currentPage = pageName
         }
@@ -190,7 +207,7 @@ const Mysurvey = (prop) => {
                 }else{
                     setDetailsPage(true);
                 }
-            survey.currentPage = pageName; 
+            survey.currentPage = pageName;
         }
         if(pageName == "Details"){
             setDetailsPage(true)
@@ -405,19 +422,19 @@ const Mysurvey = (prop) => {
 
     survey.onUpdateQuestionCssClasses.add(function(survey, options) {
         var classes = options.cssClasses
-        classes.mainRoot += " sv_qstn";
+        classes.mainRoot = addClassOnce(classes.mainRoot, "sv_qstn");
         classes.root = "sq-root";
-        classes.title += " sq-title";
+        classes.title = addClassOnce(classes.title, "sq-title");
         classes.description ="sq-description";
-        classes.item += " sq-item";
-        classes.label += " sq-label";
-        
+        classes.item = addClassOnce(classes.item, "sq-item");
+        classes.label = addClassOnce(classes.label, "sq-label");
+
     if (options.question.isRequired) {
-        classes.title += " sq-title-required";
-        classes.root += " sq-root-required";
+        classes.title = addClassOnce(classes.title, "sq-title-required");
+        classes.root = addClassOnce(classes.root, "sq-root-required");
     }
     if (options.question.getType() === "checkbox") {
-        classes.root += " sq-root-cb";
+        classes.root = addClassOnce(classes.root, "sq-root-cb");
     }
     });
 

@@ -6,7 +6,9 @@ import { useEffect } from 'react'
 const About = () => {
     
     useEffect(()=> {
-        var userState = JSON.parse(sessionStorage.getItem('userState'));
+        // Direct navigation to /about (deep link, bookmark, fresh tab) skips the
+        // Home page, which is what normally seeds sessionStorage's userState.
+        var userState = JSON.parse(sessionStorage.getItem('userState')) || {};
         userState['page'] = "aboutPage";
         userState['has_switched_page'] = true;
         sessionStorage.setItem('userState', JSON.stringify(userState));
