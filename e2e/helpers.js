@@ -30,16 +30,15 @@ async function answerAllVisibleRadios(page) {
     // rendered chart look identical, hiding the stale-dataset-reference bug this
     // suite is meant to catch.
     const optionIndex = questionIndex % 4;
-    // Use evaluate to set the radio directly via JS and trigger change events
-    await page.evaluate(({ selector, index }) => {
-      const radios = Array.from(document.querySelectorAll(selector));
-      const target = radios[index];
-      if (target && !target.checked) {
-        target.checked = true;
-        target.dispatchEvent(new Event('change', { bubbles: true }));
-        target.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-    }, { selector: `input[type="radio"][name="${name}"]`, index: optionIndex });
+    const input = page.locator(`input[type="radio"][name="${name}"]`).nth(optionIndex);
+    // SurveyJS renders these radios visually hidden (clipped to 1x1px) behind a styled
+    // <label> that is the actual clickable surface for a real user. Force-clicking the
+    // hidden <input> directly is unreliable: swapping practice panels re-renders the
+    // question list without stable per-question keys, so React/the browser can reuse the
+    // same <input> DOM nodes for a different question, and the native radio-group
+    // "checked" bookkeeping leaks a stale selection onto the freshly-swapped node before
+    // a forced click on it registers. Clicking the visible label sidesteps this entirely.
+    await input.locator('xpath=ancestor::label[1]').click();
     questionIndex++;
   }
 }
@@ -49,16 +48,24 @@ async function getChartData(page, canvasSelector) {
     const canvas = document.querySelector(selector);
     if (!canvas) return null;
     const fiberKey = Object.keys(canvas).find((k) => k.startsWith('__reactFiber'));
-    let node = fiberKey ? canvas[fiberKey] : null;
-    let depth = 0;
-    while (node && depth < 15) {
-      if (node.memoizedProps && node.memoizedProps.data && node.memoizedProps.data.datasets) {
-        return node.memoizedProps.data;
-      }
-      node = node.return;
-      depth++;
-    }
-    return null;
+    const canvasFiber = fiberKey ? canvas[fiberKey] : null;
+    // react-chartjs-2's ChartComponent renders <canvas> directly from its own function
+    // body, so the canvas fiber's `.return` IS the ChartComponent fiber -- reading the
+    // `data` prop off of it (walking further up as a fallback) reflects whatever object
+    // pages/results.js currently holds, NOT what Chart.js was actually told to paint:
+    // react-chartjs-2 only re-syncs its internal chart when the `data.datasets` *array
+    // reference* changes (see its useEffect deps), so mutating `datasets[i].data` in
+    // place leaves the real chart frozen while this prop object silently drifts ahead.
+    // The only way to see what's actually rendered is the Chart.js instance itself,
+    // reached via chartRef, react-chartjs-2's second hook (after canvasRef) in
+    // ChartComponent -- both are plain useRef() calls, so this is a direct, not a
+    // guessed, read of its hooks linked list for the installed react-chartjs-2 version.
+    const componentFiber = canvasFiber ? canvasFiber.return : null;
+    const canvasRefHook = componentFiber ? componentFiber.memoizedState : null;
+    const chartRefHook = canvasRefHook ? canvasRefHook.next : null;
+    const chart = chartRefHook && chartRefHook.memoizedState ? chartRefHook.memoizedState.current : null;
+    if (!chart) return null;
+    return chart.config.data;
   }, canvasSelector);
 }
 
