@@ -1,6 +1,12 @@
 // e2e/assessment-flow.spec.js
 const { test, expect } = require('@playwright/test');
-const { startAssessment, clickNavTab, answerAllVisibleRadios } = require('./helpers');
+const {
+  startAssessment,
+  clickNavTab,
+  answerAllVisibleRadios,
+  firstRadioName,
+  waitForPanelChange,
+} = require('./helpers');
 
 test('direct navigation via in-survey navbar tabs', async ({ page }) => {
   await startAssessment(page);
@@ -16,8 +22,18 @@ test('complete assessment across all domains and Details redirects to results', 
   await startAssessment(page);
   const domains = ['Governance', 'Design', 'Implementation', 'Verification', 'Operations'];
   for (const domain of domains) {
+    const previousName = await firstRadioName(page);
     await clickNavTab(page, domain);
+    await waitForPanelChange(page, previousName);
     await answerAllVisibleRadios(page);
+    // Each domain has 3 practice panels navigated via "Next Practice", which
+    // disappears on the last panel of the domain.
+    while (await page.getByRole('button', { name: 'Next Practice' }).count() > 0) {
+      const previousPracticeName = await firstRadioName(page);
+      await page.getByRole('button', { name: 'Next Practice' }).click();
+      await waitForPanelChange(page, previousPracticeName);
+      await answerAllVisibleRadios(page);
+    }
   }
   await clickNavTab(page, 'Details');
   const textInputs = page.locator('input[type="text"]');

@@ -1,41 +1,29 @@
 // e2e/results-page.spec.js
 const { test, expect } = require('@playwright/test');
-const { startAssessment, clickNavTab, answerAllVisibleRadios, getChartData } = require('./helpers');
+const {
+  startAssessment,
+  clickNavTab,
+  answerAllVisibleRadios,
+  getChartData,
+  firstRadioName,
+  waitForPanelChange,
+} = require('./helpers');
 
 test('results page renders graphs and offers print/export', async ({ page }) => {
   await startAssessment(page);
   const domains = ['Governance', 'Design', 'Implementation', 'Verification', 'Operations'];
 
-  // Navigating to a domain tab or a new practice panel swaps the rendered question set;
-  // querying/answering radios before that swap lands answers on the panel we just left.
-  // Wait for the actual DOM signal (the first radio's name no longer matches the panel we
-  // came from) rather than a guessed delay.
-  async function firstRadioName() {
-    const first = page.locator('input[type="radio"]').first();
-    return (await first.count()) > 0 ? first.getAttribute('name') : null;
-  }
-  async function waitForPanelChange(previousName) {
-    if (previousName === null) {
-      await page.locator('input[type="radio"]').first().waitFor();
-      return;
-    }
-    await page.waitForFunction((prev) => {
-      const el = document.querySelector('input[type="radio"]');
-      return !!el && el.name !== prev;
-    }, previousName);
-  }
-
   for (const domain of domains) {
-    const previousName = await firstRadioName();
+    const previousName = await firstRadioName(page);
     await clickNavTab(page, domain);
-    await waitForPanelChange(previousName);
+    await waitForPanelChange(page, previousName);
     await answerAllVisibleRadios(page);
-    // Each domain has 3 practice panels; "Next Practice" reveals the next one only
-    // after the previous panel's radios are answered, and disappears on the last panel.
+    // Each domain has 3 practice panels navigated via "Next Practice", which
+    // disappears on the last panel of the domain.
     while (await page.getByRole('button', { name: 'Next Practice' }).count() > 0) {
-      const previousPracticeName = await firstRadioName();
+      const previousPracticeName = await firstRadioName(page);
       await page.getByRole('button', { name: 'Next Practice' }).click();
-      await waitForPanelChange(previousPracticeName);
+      await waitForPanelChange(page, previousPracticeName);
       await answerAllVisibleRadios(page);
     }
   }

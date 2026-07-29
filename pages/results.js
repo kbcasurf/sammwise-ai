@@ -65,6 +65,9 @@ function saveText(text, filename){
 // changes that reference, so the chart silently keeps rendering its initial (empty)
 // data. Reassigning the datasets array forces react-chartjs-2 to detect the change.
 function setDatasetData(graphObj, dataNum, data) {
+  if (!graphObj.metaData.datasets[dataNum]) {
+    throw new Error(`setDatasetData: no dataset at index ${dataNum}`);
+  }
   graphObj.metaData.datasets = graphObj.metaData.datasets.map((d, i) =>
     i === dataNum ? { ...d, data } : d
   );

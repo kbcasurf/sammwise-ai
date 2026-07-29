@@ -51,8 +51,8 @@ async function getChartData(page, canvasSelector) {
     const canvasFiber = fiberKey ? canvas[fiberKey] : null;
     // react-chartjs-2's ChartComponent renders <canvas> directly from its own function
     // body, so the canvas fiber's `.return` IS the ChartComponent fiber -- reading the
-    // `data` prop off of it (walking further up as a fallback) reflects whatever object
-    // pages/results.js currently holds, NOT what Chart.js was actually told to paint:
+    // `data` prop off of it reflects whatever object pages/results.js currently holds,
+    // NOT what Chart.js was actually told to paint:
     // react-chartjs-2 only re-syncs its internal chart when the `data.datasets` *array
     // reference* changes (see its useEffect deps), so mutating `datasets[i].data` in
     // place leaves the real chart frozen while this prop object silently drifts ahead.
@@ -69,4 +69,31 @@ async function getChartData(page, canvasSelector) {
   }, canvasSelector);
 }
 
-module.exports = { startAssessment, clickNavTab, answerAllVisibleRadios, getChartData };
+// Navigating to a domain tab or a new practice panel swaps the rendered question set;
+// querying/answering radios before that swap lands answers on the panel we just left.
+// Wait for the actual DOM signal (the first radio's name no longer matches the panel we
+// came from) rather than a guessed delay.
+async function firstRadioName(page) {
+  const first = page.locator('input[type="radio"]').first();
+  return (await first.count()) > 0 ? first.getAttribute('name') : null;
+}
+
+async function waitForPanelChange(page, previousName) {
+  if (previousName === null) {
+    await page.locator('input[type="radio"]').first().waitFor();
+    return;
+  }
+  await page.waitForFunction((prev) => {
+    const el = document.querySelector('input[type="radio"]');
+    return !!el && el.name !== prev;
+  }, previousName);
+}
+
+module.exports = {
+  startAssessment,
+  clickNavTab,
+  answerAllVisibleRadios,
+  getChartData,
+  firstRadioName,
+  waitForPanelChange,
+};
