@@ -2,6 +2,9 @@
   "name": "samm-calc",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,19 +13,29 @@
   },
   "dependencies": {
     "chart.js": "^3.3.2",
-    "next": "10.2.0",
-    "react": "^16.14.0",
-    "react-advanced-gauge-chart": "^0.2.7",
+    "lodash": "^4.18.1",
+    "next": "16.2.11",
+    "react": "19.2.8",
     "react-chartjs-2": "^3.0.3",
-    "react-dom": "^16.14.0",
+    "react-dom": "19.2.8",
     "react-dropzone": "^14.4.1",
     "react-gauge-chart": "^0.5.1",
     "react-to-print": "^3.3.0",
-    "survey-react": "^1.8.48"
+    "survey-core": "^2.5.35",
+    "survey-react-ui": "^2.5.35"
+  },
+  "//lodash": "lodash is not imported by this app directly. react-gauge-chart@0.5.1 does require('lodash/isEqual') but omits lodash from its own dependencies. Next 10's dependency tree supplied it by accident via react-chartjs-2@3.0.3's own transitive deps (dropped when react-chartjs-2 was bumped to 3.3.0 in this same task); Next 16's tree does not, so /results fails to build without it. Do not remove it as an unused dependency.",
+  "//overrides": "These two chart libraries declare React peer ranges that stop at 16/17/18 (react-gauge-chart@0.5.1 is its latest release, and react-chartjs-2@3.0.3 is pinned below its 5.3.1 release because upgrading further would require an out-of-scope chart.js 3->4 major bump). Neither uses React's function-component defaultProps or any other API React 19 removed, so the incompatibility is in the declared range only. Overriding the peers (rather than setting legacy-peer-deps project-wide) keeps `npm ci` strict for every other dependency.",
+  "overrides": {
+    "react-chartjs-2": {
+      "react": "$react"
+    },
+    "react-gauge-chart": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.0",
-    "@types/react-gauge-chart": "^0.3.0",
-    "style-loader": "^2.0.0"
+    "@playwright/test": "^1.62.0"
   }
 }

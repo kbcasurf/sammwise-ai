@@ -50,7 +50,7 @@ footer {
 
 @font-face {
   font-family: 'armata';
-  src: url('/fonts/armata/Armate-Regular.otf');
+  src: url('/fonts/armata/Armata-Regular.otf');
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -116,8 +116,16 @@ footer {
   margin-bottom: 5px;
 }
 
-.sv_main{
-  font-family: "Armata";
+.sd-root-modern{
+  font-family: "Armata" !important;
+}
+
+/* survey-core's default "static" width mode caps the questionnaire body at
+   720px (90 * 8px base unit), narrower than the 960px nav/footer set by
+   .content. Match it so the questionnaire spans the same width as the rest
+   of the page. */
+.content .sd-body.sd-body--static {
+  max-width: 960px;
 }
 
 .flexWrap {

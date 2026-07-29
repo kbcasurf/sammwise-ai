@@ -58,7 +58,7 @@ Requires docker and docker-compose on the source system.
 
 ### Node
 
-Requires npm 10.3 or higher to run.
+Requires Node.js >=20.9.0 and npm 10.3 or higher to run.
 First pull down the required dependencies
 
 `npm install`
@@ -72,6 +72,12 @@ Then run the following depending on your use case:
 `npm run build`
 
 `npm run start`
+
+### Testing
+
+End-to-end tests (Playwright) can be run with:
+
+`npm run test:e2e`
 
 ## Contribute
 

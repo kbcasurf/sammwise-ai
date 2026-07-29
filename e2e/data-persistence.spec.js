@@ -1,10 +1,8 @@
 // e2e/data-persistence.spec.js
 const { test, expect } = require('@playwright/test');
 const { startAssessment, clickNavTab } = require('./helpers');
-const os = require('os');
-const path = require('path');
 
-test('save responses to file and reload via upload restores answers', async ({ page }) => {
+test('save responses to file and reload via upload restores answers', async ({ page }, testInfo) => {
   await startAssessment(page);
   await clickNavTab(page, 'Details');
   const textInputs = page.locator('input[type="text"]');
@@ -16,7 +14,9 @@ test('save responses to file and reload via upload restores answers', async ({ p
   await page.getByRole('button', { name: 'Save Responses' }).click();
   const download = await downloadPromise;
   // saveAs() with explicit .json ensures the app's upload validation (comps/inputfile.js:35) accepts the file
-  const filePath = path.join(os.tmpdir(), 'test-responses.json');
+  // testInfo.outputPath() is worker-isolated and self-cleaning, avoiding collisions between
+  // parallel workers/retries that a fixed tmpdir path would risk (fullyParallel: true).
+  const filePath = testInfo.outputPath('test-responses.json');
   await download.saveAs(filePath);
   expect(filePath).toBeTruthy();
 
