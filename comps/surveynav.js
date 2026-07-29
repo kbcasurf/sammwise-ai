@@ -10,7 +10,9 @@ const SurveyNav = (props) => {
     const[display, setDisplay] = useState(false)
     useEffect(() => {
         var navbarState = sessionStorage.getItem('navbarState');
-        var userState = JSON.parse(sessionStorage.getItem('userState'));
+        // Direct navigation to /assessment (deep link, bookmark, fresh tab) skips
+        // the Home page, which is what normally seeds sessionStorage's userState.
+        var userState = JSON.parse(sessionStorage.getItem('userState')) || {};
         var currentNavbarState = getNavbarState();
         if (navbarState != currentNavbarState){
             if(!(userState['has_switched_page'])){

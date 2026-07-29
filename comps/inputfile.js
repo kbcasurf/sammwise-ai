@@ -1,6 +1,6 @@
 import React, {useCallback, useState} from 'react'
 import {useDropzone} from 'react-dropzone'
-import Image from 'next/image'
+import Image from "next/image"
 
 // local imports 
 import styles from '../styles/inputfile.module.css'
@@ -66,18 +66,26 @@ const InputFile = (props) => {
     const {getRootProps, getInputProps} = useDropzone({onDrop})
     return (
         <>
-        <div {...getRootProps()} className = {uploadPageState? styles.pageNav:styles.uploadfile}>
-          <input {...getInputProps()} />
-          <p className="middle" style={{uploadColour,fontSize: "20px"}} >{uploadMessage}</p>
-          <div className = "middle">
-             <Image src = {uploadState? "/uploadSuccessful.png":"/dragndrop.png"} width={75} height = {75} className="middle"/>
-            
-          </div>
+            <div {...getRootProps()} className = {uploadPageState? styles.pageNav:styles.uploadfile}>
+              <input {...getInputProps()} />
+              <p className="middle" style={{uploadColour,fontSize: "20px"}} >{uploadMessage}</p>
+              <div className = "middle">
+                 <Image
+                     src = {uploadState? "/uploadSuccessful.png":"/dragndrop.png"}
+                     alt=""
+                     width={75}
+                     height = {75}
+                     className="middle"
+                     style={{
+                         maxWidth: "100%",
+                         height: "auto"
+                     }} />
+                
+              </div>
 
-        </div>
-    
+            </div>
         </>
-      );
+    );
 }
  
 export default InputFile;

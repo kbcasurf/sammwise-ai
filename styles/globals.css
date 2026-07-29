@@ -50,7 +50,7 @@ footer {
 
 @font-face {
   font-family: 'armata';
-  src: url('/fonts/armata/Armate-Regular.otf');
+  src: url('/fonts/armata/Armata-Regular.otf');
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -116,8 +116,31 @@ footer {
   margin-bottom: 5px;
 }
 
-.sv_main{
-  font-family: "Armata";
+.sd-root-modern{
+  font-family: "Armata" !important;
+}
+
+.flexWrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.flexBoxFull {
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.flexBoxHalf {
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 40em) {
+  .flexBoxHalf {
+    width: 50%;
+  }
 }
 
 

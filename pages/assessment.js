@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import 'survey-react/survey.css';
 import Head from 'next/head'
 //local imports 
 import Mysurvey from '../comps/surveyDisplay/surveyone'

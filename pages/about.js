@@ -1,18 +1,20 @@
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
-import Image from 'next/image'
+import Image from "next/image"
 import { useEffect } from 'react'
 
 const About = () => {
     
     useEffect(()=> {
-        var userState = JSON.parse(sessionStorage.getItem('userState'));
+        // Direct navigation to /about (deep link, bookmark, fresh tab) skips the
+        // Home page, which is what normally seeds sessionStorage's userState.
+        var userState = JSON.parse(sessionStorage.getItem('userState')) || {};
         userState['page'] = "aboutPage";
         userState['has_switched_page'] = true;
         sessionStorage.setItem('userState', JSON.stringify(userState));
     })
     
-    return ( 
+    return (
         <>
             <Head>
                 <title>SAMMWise | About </title>
@@ -41,14 +43,22 @@ const About = () => {
                     <li className = {styles.paragraph}>			Contribution of de-identified assessment results to SAMM Benchmark Project   </li>  
                 <h2 className = {styles.title} >Version History</h2>
                 <div style={{float:"right"}}>
-                    <Image src = "/DatacomLogo.png" width = {321} height = {61}/>
+                    <Image
+                        src = "/DatacomLogo.png"
+                        alt = "Datacom"
+                        width = {321}
+                        height = {61}
+                        style={{
+                            maxWidth: "100%",
+                            height: "auto"
+                        }} />
                 </div>
                 <p className = {styles.paragraph}>Version 1.0 - The initial release of SAMMwise was developed in July - October 2021 by the Application Security Services Team at Datacom New Zealand. 
                     The tool was released as an open-source project and donated to the OWASP SAMM project. 
                 </p>
             </div>
         </>
-        );
+    );
 }
  
 export default About;

@@ -1,10 +1,9 @@
 // react imports
 import {Radar, Doughnut, Bar} from 'react-chartjs-2';
-import { Flex, Box } from 'reflexbox'
 import GaugeChart from 'react-gauge-chart'
 import React, {useState,useEffect, useRef} from 'react';
 import Head from 'next/head'
-import ReactToPrint, {PrintContextConsumer} from 'react-to-print';
+import { useReactToPrint } from 'react-to-print';
 import {useRouter} from 'next/router'
 
 //local imports
@@ -69,7 +68,8 @@ const results = () => {
     const[display,setDisplay] = useState(0)
     const[showPrevious, setShowPrevious] = useState(false)
     const componentRef = useRef();
-    const reducer = (prevValue, currValue) => prevValue + currValue;   
+    const handlePrint = useReactToPrint({ contentRef: componentRef });
+    const reducer = (prevValue, currValue) => prevValue + currValue;
     function reloadPage(){
         location.reload();
     }
@@ -87,7 +87,9 @@ const results = () => {
                 answer_values.push(assessmentSessionStateData[key]);
             }
             var answer_sum = answer_values.reduce(reducer);
-            var userStateUpdate = JSON.parse(sessionStorage.getItem('userState'));
+            // Direct navigation to /results (deep link, bookmark, fresh tab) skips
+            // the Home page, which is what normally seeds sessionStorage's userState.
+            var userStateUpdate = JSON.parse(sessionStorage.getItem('userState')) || {};
             userStateUpdate['page'] = 'resultsPage';
             userStateUpdate['has_switched_page'] = true;
             sessionStorage.setItem('userState', JSON.stringify(userStateUpdate));
@@ -255,40 +257,40 @@ const results = () => {
                         <SurveyButton name="Refresh Graphs" onClick={()=> reloadPage()} />
                     </div>
                     <div label='TOTALS' id="totalsDiv">
-                        <Flex flexWrap = 'wrap'>
-                            <Box width ={[1]} p = {3} id="box1" className="totalGraphs">
+                        <div className="flexWrap">
+                            <div className="flexBoxFull totalGraphs" id="box1">
                                 {/* <h2 id="finalscore">{showPrevious? 'Your overall score is: '+ finalScore[0] + ' Your score last time was: ' +finalScore[1]:'Your overall score is: '+ finalScore[0]}</h2>
                                 <GaugeChart id="gauge-chart2" nrOfLevels={4}   textColor ={"#000000"} colors={[" #ff6384","#ff9f40","#ffcd56","#4bc0c0"]} className="gauge"/> */}
                                 <h2 id="finalscore">{showPrevious? 'Your overall score is: '+ finalScore[0]+'/3' + ' Your score last time was: ' +finalScore[1] +'/3':'Your overall score is: '+ finalScore[0] +'/3'}</h2>
                                 <GaugeChart id="gauge-chart2" nrOfLevels={4}  percent={percentageScore} textColor ={"#000000"} colors={[" #ff6384","#ff9f40","#ffcd56","#4bc0c0"]} className="gauge"/>
                                 <h2 id="totalsbargraph" className="totalsBarHeader"> Response count by value </h2>
                                 <Bar data = {totalsBarGraph.metaData} options = {totalsBarGraph.layout_props} className='totalsBar' />
-                            </Box> 
-                        </Flex>
+                            </div>
+                        </div>
                     </div>
                     <div label='Business Functions'>
-                        <Flex flexWrap = 'wrap'>
-                            <Box width ={[1,1/2]} p = {3} className="bussFuncRadarBox" >
+                        <div className="flexWrap">
+                            <div className="flexBoxHalf bussFuncRadarBox">
                                 <h2 id = "busfuncradargraph"> Maturity by Business Function </h2>
                                 <Radar data = {bussFuncRadar.metaData}  options = {bussFuncRadar.layout_props} className='bussFuncRadar'/>
-                            </Box>
-                            <Box width ={[1,1/2]} p = {3} className="bussFuncBarBox">
+                            </div>
+                            <div className="flexBoxHalf bussFuncBarBox">
                                 <h2> Maturity by Business Function </h2>
                                 <Bar data = {bussFuncBarGraph.metaData} options = {bussFuncBarGraph.layout_props} className='bussFuncBar'/>
-                            </Box>                  
-                        </Flex>
+                            </div>
+                        </div>
                     </div>
                     <div label='Practices' className="practices">
-                        <Flex flexWrap = 'wrap'>
-                            <Box width ={[1,1/2]} p = {3} className="practiceRadarBox">
+                        <div className="flexWrap">
+                            <div className="flexBoxHalf practiceRadarBox">
                                 <h2 id = "pracradargraph"> Maturity by Practice </h2>
                                 <Radar  data = {practiceRadar.metaData}  options = {practiceRadar.layout_props} className='practiceRadar'/>
-                            </Box>
-                            <Box width ={[1,1/2]} p = {3} className="practicesBarBox">
+                            </div>
+                            <div className="flexBoxHalf practicesBarBox">
                                 <h2 id ="pracbargraph"> Maturity by Practice </h2>
                                 <Bar data = {practiceBarGraph.metaData} options = {practiceBarGraph.layout_props} className='practiceBar'/>
-                            </Box>
-                        </Flex> 
+                            </div>
+                        </div>
                     </div>
                 </div>
                     <div className="jsonDownload">     
@@ -305,10 +307,7 @@ const results = () => {
             
             <div>
                 <h2 className='jsonDownload'> Do you wish to print or save the graphs as a pdf?</h2>
-                    <ReactToPrint 
-                    trigger={() => <button className='btn'>Export graphs</button>}
-                    content={()=>  componentRef.current}
-                    />
+                    <button className='btn' onClick={() => handlePrint()}>Export graphs</button>
             </div>
             
             

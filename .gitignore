@@ -105,3 +105,11 @@ dist
 
 # Claude Code / Superpowers local specs and plans (not tracked in repo history)
 docs/superpowers/
+
+# Playwright E2E test artifacts
+playwright-report/
+test-results/
+.playwright-mcp/
+
+# Superpowers specs/plans (local only)
+.superpowers/

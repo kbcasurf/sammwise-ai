@@ -3,10 +3,10 @@
 //TODO: make the panels buttons part of an outside function
 
 import React, {useState, useEffect, useRef} from 'react';
-import 'survey-react/survey.css';
-import * as Survey from 'survey-react';
-import { Flex, Box } from 'reflexbox'
-import assert, { strictEqual } from 'assert';
+// Idiomatic package-subpath import resolves fine as of Next 16 / survey-core 2.5.x.
+import 'survey-core/survey-core.css';
+import { Model } from 'survey-core';
+import { Survey } from 'survey-react-ui';
 //local imports
 import Json from  '../surveys/totalsurvey';
 import InputFile from '../inputfile';
@@ -19,7 +19,7 @@ import question_desc from '../surveys/question_desc';
 // import saveText from '../saveResponses';
 
 
-const survey = new Survey.Model(Json());
+const survey = new Model(Json());
 var isDropDownButtonClicked = false;
 
 function formatDate(date) {
@@ -48,6 +48,16 @@ function formatDate(date) {
     return [year, month, day,hours,minutes,seconds].join('');
   }
 
+// Appends cls to a space-separated class list only if not already present.
+// survey-core reuses the same cssClasses object across re-renders, so plain
+// `+=` concatenation (the previous approach) grew the class string unbounded.
+function addClassOnce(current, cls) {
+    var tokens = (current || "").split(" ").filter(Boolean);
+    if (tokens.indexOf(cls) === -1) {
+        tokens.push(cls);
+    }
+    return tokens.join(" ");
+}
 
 const Mysurvey = (prop) => {
     
@@ -59,13 +69,20 @@ const Mysurvey = (prop) => {
     const [dropDownState, setDropDownState] = useState(false);
     const [isDetailsPage, setDetailsPage] = useState(false);
     const [reloadSurvey, setReloadSurvey] = useState(false);
-    
+
+    // pageState mirror: the effect below only depends on [display], so its
+    // closure would otherwise see a stale pageState from whenever it last ran.
+    const pageStateRef = useRef(pageState);
+    useEffect(() => { pageStateRef.current = pageState; }, [pageState]);
+
     //Use Effect for populating the Survey with predefined answerd from a file or from previously answered survey
     useEffect(() => {
         
         var loadedResults = JSON.parse(sessionStorage.getItem('loadedResults'));
         var assessmentState = JSON.parse(sessionStorage.getItem('assessmentState'))
-        var userState = JSON.parse(sessionStorage.getItem('userState'));
+        // Direct navigation to /assessment (deep link, bookmark, fresh tab) skips
+        // the Home page, which is what normally seeds sessionStorage's userState.
+        var userState = JSON.parse(sessionStorage.getItem('userState')) || {};
         userState['page'] = 'assessmentPage';
         userState['has_switched_page'] = false;
 
@@ -92,11 +109,11 @@ const Mysurvey = (prop) => {
         var navbar = sessionStorage.getItem('navbarState');
         
         
-        if(pageState != navbar){
+        if(pageStateRef.current != navbar){
             changePage(navbar);
         }
         
-        var userStateData = JSON.parse(sessionStorage.getItem('userState'));
+        var userStateData = JSON.parse(sessionStorage.getItem('userState')) || {};
         if(navbar == "Details"){
             setDetailsPage(true);
         }
@@ -151,7 +168,7 @@ const Mysurvey = (prop) => {
 
     // Function that changes page and sets the state of buttons on the navbar
     function changePage(pageName){
-        
+
         if(pageName != "next"){
             survey.currentPage = pageName
         }
@@ -190,7 +207,7 @@ const Mysurvey = (prop) => {
                 }else{
                     setDetailsPage(true);
                 }
-            survey.currentPage = pageName; 
+            survey.currentPage = pageName;
         }
         if(pageName == "Details"){
             setDetailsPage(true)
@@ -209,6 +226,7 @@ const Mysurvey = (prop) => {
     var panels= [];
     var curr_panel_names = [];
     var panelStateMap = new Map()
+    var panelElementMap = new Map()
     var all_pages = survey.pages;
     var page_names = [];
     
@@ -259,7 +277,8 @@ const Mysurvey = (prop) => {
 
     survey.onAfterRenderPanel.add(function(survey, options){
         var rendered_panel = options.panel.name;
-        
+        panelElementMap.set(rendered_panel, options.htmlElement);
+
         var index = curr_panel_names.indexOf(rendered_panel);
         var firstRender = false;
         var currentPanel = panels[index];
@@ -275,20 +294,12 @@ const Mysurvey = (prop) => {
         }
 
         function panelScroll(targetPanelName){
-            var hTags = document.getElementsByTagName("h4");
-            
-            var found;
-
-            for(var i=0; i < hTags.length; i++){
-                if (hTags[i].textContent == targetPanelName){
-                    found = hTags[i];
-                    break;
-                }
+            var target = panelElementMap.get(targetPanelName);
+            if (target){
+                target.scrollIntoView({
+                    behavior: "smooth"
+                });
             }
-            
-            found.scrollIntoView({
-                behavior: "smooth"
-            });
         }
 
         function isFirstPanel(index){
@@ -313,10 +324,8 @@ const Mysurvey = (prop) => {
             btn.className = "btn btn-info btn-xs";
             btn.id = btnID;
             btn.innerHTML = button_type;
-            // Insert buttons into html document   
-            var header = options.htmlElement.querySelector("h4");
-            // if (!header)
-            header = options.htmlElement;
+            // Insert buttons into html document
+            var header = options.htmlElement;
             var span = document.createElement("span");
             span.id = rendered_panel+"panel";
             span.class = 'span';
@@ -413,19 +422,19 @@ const Mysurvey = (prop) => {
 
     survey.onUpdateQuestionCssClasses.add(function(survey, options) {
         var classes = options.cssClasses
-        classes.mainRoot += " sv_qstn";
+        classes.mainRoot = addClassOnce(classes.mainRoot, "sv_qstn");
         classes.root = "sq-root";
-        classes.title += " sq-title";
+        classes.title = addClassOnce(classes.title, "sq-title");
         classes.description ="sq-description";
-        classes.item += " sq-item";
-        classes.label += " sq-label";
-        
+        classes.item = addClassOnce(classes.item, "sq-item");
+        classes.label = addClassOnce(classes.label, "sq-label");
+
     if (options.question.isRequired) {
-        classes.title += " sq-title-required";
-        classes.root += " sq-root-required";
+        classes.title = addClassOnce(classes.title, "sq-title-required");
+        classes.root = addClassOnce(classes.root, "sq-root-required");
     }
     if (options.question.getType() === "checkbox") {
-        classes.root += " sq-root-cb";
+        classes.root = addClassOnce(classes.root, "sq-root-cb");
     }
     });
 
@@ -489,7 +498,7 @@ const Mysurvey = (prop) => {
             
                     
             <SurveyNav button = {pageState} onClick = {value => changePage(value)}/>
-            <Survey.Survey  showCompletedPage={false}
+            <Survey  showCompletedPage={false}
                 onComplete = {data => prop.showCompletedPage(data.valuesHash)}
                 model = {surveyState} 
                 />
