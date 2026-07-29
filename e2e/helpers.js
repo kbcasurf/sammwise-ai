@@ -30,7 +30,16 @@ async function answerAllVisibleRadios(page) {
     // rendered chart look identical, hiding the stale-dataset-reference bug this
     // suite is meant to catch.
     const optionIndex = questionIndex % 4;
-    await page.locator(`input[type="radio"][name="${name}"]`).nth(optionIndex).check({ force: true });
+    // Use evaluate to set the radio directly via JS and trigger change events
+    await page.evaluate(({ selector, index }) => {
+      const radios = Array.from(document.querySelectorAll(selector));
+      const target = radios[index];
+      if (target && !target.checked) {
+        target.checked = true;
+        target.dispatchEvent(new Event('change', { bubbles: true }));
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }, { selector: `input[type="radio"][name="${name}"]`, index: optionIndex });
     questionIndex++;
   }
 }

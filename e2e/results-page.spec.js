@@ -8,6 +8,12 @@ test('results page renders graphs and offers print/export', async ({ page }) => 
   for (const domain of domains) {
     await clickNavTab(page, domain);
     await answerAllVisibleRadios(page);
+    while (await page.getByRole('button', { name: 'Next Practice' }).count() > 0) {
+      await page.getByRole('button', { name: 'Next Practice' }).click();
+      // Wait for the panel content to load by checking that radios are stable
+      await page.waitForTimeout(500);
+      await answerAllVisibleRadios(page);
+    }
   }
   await clickNavTab(page, 'Details');
   await page.locator('input[type="text"]').nth(0).fill('Acme Corp');
