@@ -16,6 +16,8 @@ import Dataset from '../comps/surveyDisplay/graphs/datasetprops';
 import ComponentToPrint from '../comps/ComponentToPrint';
 import assessmentCalculator from '../comps/surveyDisplay/graphs/testCalculator';
 import SurveyButton from '../comps/buttons/surveybuttons';
+import GapAnalysisConsent from '../comps/gapAnalysis/GapAnalysisConsent';
+import GapAnalysisReport from '../comps/gapAnalysis/GapAnalysisReport';
 
 var completionText
 var dataENV = []
@@ -82,6 +84,16 @@ const results = () => {
     const[showPrevious, setShowPrevious] = useState(false)
     const[saveMessage, setSaveMessage] = useState('')
     const[isSaving, setIsSaving] = useState(false)
+    const[aiReportEnabled, setAiReportEnabled] = useState(false)
+    const[consentVisible, setConsentVisible] = useState(false)
+    const[reportVisible, setReportVisible] = useState(false)
+    const[reportLoading, setReportLoading] = useState(false)
+    const[reportError, setReportError] = useState(false)
+    const[report, setReport] = useState(null)
+    const[savedAssessmentId, setSavedAssessmentId] = useState(null)
+    const[attachMessage, setAttachMessage] = useState('')
+    const[isAttaching, setIsAttaching] = useState(false)
+    const[practiceScoresByName, setPracticeScoresByName] = useState({})
     const componentRef = useRef();
     const router = useRouter();
     const handlePrint = useReactToPrint({ contentRef: componentRef });
@@ -103,6 +115,8 @@ const results = () => {
             if (!response.ok) {
                 throw new Error('Failed to save assessment');
             }
+            const result = await response.json();
+            setSavedAssessmentId(result.id);
             setSaveMessage('Assessment saved to history.');
         } catch (err) {
             setSaveMessage('Unable to save to history. Please try again.');
@@ -110,6 +124,58 @@ const results = () => {
             setIsSaving(false)
         }
     }
+
+    async function handleGenerateReport(){
+        setConsentVisible(false)
+        setReportVisible(true)
+        setReportLoading(true)
+        setReportError(false)
+        setReport(null)
+        try {
+            const response = await fetch('/api/gap-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answers: dataENV[0] }),
+            });
+            if (!response.ok) {
+                throw new Error('Gap analysis request failed');
+            }
+            const result = await response.json();
+            setReport(result);
+        } catch (err) {
+            setReportError(true)
+        } finally {
+            setReportLoading(false)
+        }
+    }
+
+    async function handleAttachToHistory(){
+        if (!savedAssessmentId || !report || isAttaching) return;
+        setIsAttaching(true)
+        setAttachMessage('')
+        try {
+            const response = await fetch(`/api/assessments/${savedAssessmentId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gapAnalysisReport: report }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to attach report');
+            }
+            setAttachMessage('Report attached to history.')
+        } catch (err) {
+            setAttachMessage('Unable to attach report. Please try again.')
+        } finally {
+            setIsAttaching(false)
+        }
+    }
+
+    useEffect(() => {
+        fetch('/api/config')
+            .then((res) => (res.ok ? res.json() : { aiReportEnabled: false }))
+            .then((cfg) => setAiReportEnabled(!!cfg.aiReportEnabled))
+            .catch(() => setAiReportEnabled(false));
+    }, [])
 
         useEffect( () => {
             if (!router.isReady) return;
@@ -295,6 +361,9 @@ const results = () => {
                         finalScore[dataNum]= testCalc.overallScore.toFixed(2);
                         if (dataNum === 0) {
                             overallScoreRaw = testCalc.overallScore;
+                            const scoresByName = {};
+                            testCalc.practiceNames.forEach((name, idx) => { scoresByName[name] = testCalc.practiceScores[idx]; });
+                            setPracticeScoresByName(scoresByName);
                         }
 
                         percentageScore = (finalScore[dataNum] /3).toFixed(2);
@@ -384,6 +453,20 @@ const results = () => {
                                 Save to history
                         </button>
                         {saveMessage && <p className="historySaveMessage">{saveMessage}</p>}
+                        {aiReportEnabled && (
+                            <>
+                                <h2 className="jsonDownload">Do you wish to generate an AI gap analysis report?</h2>
+                                <button className="btn" onClick={() => setConsentVisible(true)}>
+                                    Generate Gap Analysis Report
+                                </button>
+                                {report && savedAssessmentId && (
+                                    <button className="btn" onClick={() => handleAttachToHistory()} disabled={isAttaching}>
+                                        Attach report to history
+                                    </button>
+                                )}
+                                {attachMessage && <p className="historySaveMessage">{attachMessage}</p>}
+                            </>
+                        )}
                         <h2 className="jsonDownload">Do you wish to load your previous results to compare?</h2>
                         <InputFile fileName = 'prevResults' className="jsonDownload"/>
                     </div>
@@ -394,8 +477,20 @@ const results = () => {
                 <h2 className='jsonDownload'> Do you wish to print or save the graphs as a pdf?</h2>
                     <button className='btn' onClick={() => handlePrint()}>Export graphs</button>
             </div>
-            
-            
+
+            <GapAnalysisConsent
+                visible={consentVisible}
+                onCancel={() => setConsentVisible(false)}
+                onConfirm={handleGenerateReport}
+            />
+            <GapAnalysisReport
+                visible={reportVisible}
+                loading={reportLoading}
+                error={reportError}
+                report={report}
+                practiceScores={practiceScoresByName}
+                onClose={() => setReportVisible(false)}
+            />
             </>
         );
 }
