@@ -179,6 +179,13 @@ const results = () => {
                         bussFuncBarGraph.metaData.datasets = bussFuncBarGraph.metaData.datasets.slice(0, 1);
                         practiceBarGraph.metaData.datasets = practiceBarGraph.metaData.datasets.slice(0, 1);
                     }
+                    // Unlike the bar graphs, SpiderGraph always has a fixed
+                    // "Previous Assessment" dataset slot (index 1) from
+                    // construction, so it never gets re-populated by the
+                    // dataNum loop below once dataENV is trimmed back to 1 —
+                    // clear it explicitly or it keeps drawing stale data.
+                    setDatasetData(bussFuncRadar, 1, []);
+                    setDatasetData(practiceRadar, 1, []);
                 }
                 completionText = 'Thank you for completing the questionnaire'   
                 
