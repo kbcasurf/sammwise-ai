@@ -132,10 +132,18 @@ const results = () => {
         setReportError(false)
         setReport(null)
         try {
+            // Only send the question answers to our own /api/gap-analysis endpoint,
+            // not the full assessment state (which also carries 'Company Name',
+            // 'Project name' and 'Description of Project' as sibling keys) — the
+            // server filters these out before prompting the AI provider, but they
+            // shouldn't cross the wire from the browser at all.
+            const answers = Object.fromEntries(
+                Object.entries(dataENV[0]).filter(([key]) => key.startsWith('question'))
+            );
             const response = await fetch('/api/gap-analysis', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ answers: dataENV[0] }),
+                body: JSON.stringify({ answers }),
             });
             if (!response.ok) {
                 throw new Error('Gap analysis request failed');
