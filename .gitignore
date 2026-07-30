@@ -113,3 +113,6 @@ test-results/
 
 # Superpowers specs/plans (local only)
 .superpowers/
+
+# SQLite runtime data (assessment history)
+data/
