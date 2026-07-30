@@ -3,6 +3,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { Line } from 'react-chartjs-2';
+import assessmentCalculator from '../comps/surveyDisplay/graphs/testCalculator';
+import GapAnalysisReport from '../comps/gapAnalysis/GapAnalysisReport';
 
 // created_at is stored as an SQLite CURRENT_TIMESTAMP string (e.g. '2026-07-30 01:09:13')
 // which is UTC but carries no timezone designator. `new Date(str)` on a designator-less
@@ -22,6 +24,9 @@ const History = () => {
     const [debouncedProject, setDebouncedProject] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [viewedReport, setViewedReport] = useState(null);
+    const [viewedPracticeScores, setViewedPracticeScores] = useState({});
+    const [reportModalVisible, setReportModalVisible] = useState(false);
 
     // Debounce the filter inputs so each keystroke doesn't trigger its own request.
     useEffect(() => {
@@ -69,6 +74,22 @@ const History = () => {
 
     function handleCompare(id) {
         router.push(`/results?compareId=${id}`);
+    }
+
+    async function handleViewReport(id) {
+        const response = await fetch(`/api/assessments/${id}`);
+        if (!response.ok) {
+            setError('Unable to load the gap analysis report.');
+            return;
+        }
+        const record = await response.json();
+        const calc = new assessmentCalculator(record.data);
+        calc.computeResults();
+        const scoresByName = {};
+        calc.practiceNames.forEach((name, idx) => { scoresByName[name] = calc.practiceScores[idx]; });
+        setViewedPracticeScores(scoresByName);
+        setViewedReport(record.gapAnalysisReport);
+        setReportModalVisible(true);
     }
 
     const chronological = assessments.slice().reverse();
@@ -145,12 +166,23 @@ const History = () => {
                                 <td>
                                     <button className="btn" onClick={() => handleCompare(a.id)}>Compare</button>
                                     <button className="btn" onClick={() => handleDelete(a.id)}>Delete</button>
+                                    {a.has_gap_analysis_report ? (
+                                        <button className="btn" onClick={() => handleViewReport(a.id)}>View report</button>
+                                    ) : null}
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             )}
+            <GapAnalysisReport
+                visible={reportModalVisible}
+                loading={false}
+                error={false}
+                report={viewedReport}
+                practiceScores={viewedPracticeScores}
+                onClose={() => setReportModalVisible(false)}
+            />
         </>
     );
 };
