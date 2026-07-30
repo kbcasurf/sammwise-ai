@@ -1,34 +1,21 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Build and push docker image
 
-# Controls when the workflow will run
 on:
-# commented to not be triggered on each commit
-#   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
-#   pull_request:
-#     branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: ["main"]
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-      # Runs a single command using the runners shell
+      - uses: actions/checkout@v4
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -41,7 +28,23 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GH_TOKEN }}
 
-      - name: Build and push
+      - name: Build image (local, no push)
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          push: false
+          load: true
+          tags: sammwise:scan
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: sammwise:scan
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+
+      - name: Push image
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -50,4 +53,3 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/sammwise:latest
             ghcr.io/${{ github.repository_owner }}/sammwise:latest
-            
