@@ -81,6 +81,7 @@ const results = () => {
     const[display,setDisplay] = useState(0)
     const[showPrevious, setShowPrevious] = useState(false)
     const[saveMessage, setSaveMessage] = useState('')
+    const[isSaving, setIsSaving] = useState(false)
     const componentRef = useRef();
     const router = useRouter();
     const handlePrint = useReactToPrint({ contentRef: componentRef });
@@ -90,7 +91,9 @@ const results = () => {
     }
 
     async function saveToHistory(){
+        if (isSaving) return;
         setSaveMessage('')
+        setIsSaving(true)
         try {
             const response = await fetch('/api/assessments', {
                 method: 'POST',
@@ -103,6 +106,8 @@ const results = () => {
             setSaveMessage('Avaliação salva no histórico.');
         } catch (err) {
             setSaveMessage('Não foi possível salvar no histórico. Tente novamente.');
+        } finally {
+            setIsSaving(false)
         }
     }
 
@@ -158,7 +163,22 @@ const results = () => {
                         bussFuncBarGraph.metaData.datasets.push(new Dataset().metaData);
                         practiceBarGraph.metaData.datasets.push(new Dataset().metaData);
                     }
-                    
+
+                } else {
+                    // Next.js keeps this page component mounted across client-side
+                    // pushState navigation (e.g. leaving /results?compareId=X for plain
+                    // /results). Without this reset, module-level dataENV and the bar
+                    // graphs' pushed "previous" dataset from an earlier render would
+                    // linger and keep showing a stale comparison that no longer applies.
+                    setShowPrevious(false);
+                    if (dataENV.length > 1) {
+                        dataENV.length = 1;
+                    }
+                    if (totalsBarGraph.metaData.datasets.length > 1) {
+                        totalsBarGraph.metaData.datasets = totalsBarGraph.metaData.datasets.slice(0, 1);
+                        bussFuncBarGraph.metaData.datasets = bussFuncBarGraph.metaData.datasets.slice(0, 1);
+                        practiceBarGraph.metaData.datasets = practiceBarGraph.metaData.datasets.slice(0, 1);
+                    }
                 }
                 completionText = 'Thank you for completing the questionnaire'   
                 
@@ -353,7 +373,7 @@ const results = () => {
                             onClick={()=> saveText(JSON.stringify(dataENV[0]), JSON.stringify(companyname)+JSON.stringify(projectName)+".json")}>
                                 Save file
                         </button>
-                        <button className='btn' onClick={() => saveToHistory()}>
+                        <button className='btn' onClick={() => saveToHistory()} disabled={isSaving}>
                                 Salvar no histórico
                         </button>
                         {saveMessage && <p className="historySaveMessage">{saveMessage}</p>}
