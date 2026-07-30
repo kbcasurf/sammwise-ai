@@ -80,6 +80,9 @@ const History = () => {
         const response = await fetch(`/api/assessments/${id}`);
         if (!response.ok) {
             setError('Unable to load the gap analysis report.');
+            setReportModalVisible(false);
+            setViewedReport(null);
+            setViewedPracticeScores({});
             return;
         }
         const record = await response.json();
