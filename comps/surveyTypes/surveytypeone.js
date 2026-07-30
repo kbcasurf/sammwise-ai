@@ -269,14 +269,12 @@ const Mysurvey = (prop) => {
     const currPanelNamesRef = useRef([]);
     const panelStateMapRef = useRef(new Map());
     const panelElementMapRef = useRef(new Map());
-    const allPagesRef = useRef(survey.pages);
 
     useEffect(() => {
         const panels = panelsRef.current;
         const curr_panel_names = currPanelNamesRef.current;
         const panelStateMap = panelStateMapRef.current;
         const panelElementMap = panelElementMapRef.current;
-        const all_pages = allPagesRef.current;
 
         //Reloads arrays with page panel data
         function append_panel_data(in_data){

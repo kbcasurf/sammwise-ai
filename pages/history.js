@@ -59,10 +59,11 @@ const History = () => {
     }, [debouncedCompany, debouncedProject]);
 
     useEffect(() => {
-        function run() {
-            fetchAssessments();
-        }
-        run();
+        // fetchAssessments is async; its setState calls happen after an await, not
+        // synchronously in this effect, but the static rule can't see across the await
+        // boundary. Standard fetch-on-mount.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchAssessments();
     }, [fetchAssessments]);
 
     async function handleDelete(id) {

@@ -19,6 +19,7 @@ const eslintConfig = [
   ...nextCoreWebVitals,
   {
     ignores: [
+      '.claude/**',
       '.next/**',
       'node_modules/**',
       'playwright-report/**',

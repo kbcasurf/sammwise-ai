@@ -5,6 +5,9 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -37,6 +40,12 @@ jobs:
           load: true
           tags: sammwise:scan
 
+      # Deliberately scans both OS packages and application libraries (not vuln-type: os
+      # only): the postcss/sharp HIGH findings here are the same accepted, upstream-only-fixable
+      # debt that the npm-audit job reports (see ci.yml). Unlike npm-audit, this gate blocks
+      # image publishing on them until Next.js updates its bundled postcss/sharp -- an explicit,
+      # accepted tradeoff, not an oversight. Do not add --ignore-unfixed or a .trivyignore for
+      # these specific findings without a fresh decision from the project owner.
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@0.24.0
         with:
