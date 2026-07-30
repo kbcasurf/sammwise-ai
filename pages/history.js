@@ -46,7 +46,7 @@ const History = () => {
             const data = await response.json();
             setAssessments(data);
         } catch (err) {
-            setError('Não foi possível carregar o histórico. Tente novamente.');
+            setError('Unable to load history. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -57,13 +57,13 @@ const History = () => {
     }, [fetchAssessments]);
 
     async function handleDelete(id) {
-        const confirmed = confirm('Tem certeza que deseja excluir esta avaliação?');
+        const confirmed = confirm('Are you sure you want to delete this assessment?');
         if (!confirmed) return;
         const response = await fetch(`/api/assessments/${id}`, { method: 'DELETE' });
         if (response.ok) {
             fetchAssessments();
         } else {
-            setError('Não foi possível excluir esta avaliação.');
+            setError('Unable to delete this assessment.');
         }
     }
 
@@ -89,19 +89,19 @@ const History = () => {
     return (
         <>
             <Head>
-                <title>SAMMWise | Histórico</title>
+                <title>SAMMWise | History</title>
             </Head>
-            <h1>Histórico de avaliações</h1>
+            <h1>Assessment History</h1>
             <div className="historyFilters">
                 <input
                     type="text"
-                    placeholder="Filtrar por empresa"
+                    placeholder="Filter by company"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
                 />
                 <input
                     type="text"
-                    placeholder="Filtrar por projeto"
+                    placeholder="Filter by project"
                     value={project}
                     onChange={(e) => setProject(e.target.value)}
                 />
@@ -111,27 +111,27 @@ const History = () => {
 
             {showTrend && (
                 <div className="historyTrend">
-                    <h2>Tendência de score</h2>
+                    <h2>Score trend</h2>
                     <Line data={trendData} />
                 </div>
             )}
 
             {loading ? (
-                <p>Carregando...</p>
+                <p>Loading...</p>
             ) : assessments.length === 0 ? (
                 <p>
                     {isFiltered
-                        ? 'Nenhuma avaliação encontrada para este filtro.'
-                        : 'Nenhuma avaliação salva ainda.'}
+                        ? 'No assessments found for this filter.'
+                        : 'No assessments saved yet.'}
                 </p>
             ) : (
                 <table className="historyTable">
                     <thead>
                         <tr>
-                            <th>Empresa</th>
-                            <th>Projeto</th>
+                            <th>Company</th>
+                            <th>Project</th>
                             <th>Score</th>
-                            <th>Data</th>
+                            <th>Date</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -143,8 +143,8 @@ const History = () => {
                                 <td>{a.overall_score != null ? a.overall_score.toFixed(2) : '-'}</td>
                                 <td>{toLocalDate(a.created_at).toLocaleString()}</td>
                                 <td>
-                                    <button className="btn" onClick={() => handleCompare(a.id)}>Comparar</button>
-                                    <button className="btn" onClick={() => handleDelete(a.id)}>Excluir</button>
+                                    <button className="btn" onClick={() => handleCompare(a.id)}>Compare</button>
+                                    <button className="btn" onClick={() => handleDelete(a.id)}>Delete</button>
                                 </td>
                             </tr>
                         ))}

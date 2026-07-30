@@ -103,9 +103,9 @@ const results = () => {
             if (!response.ok) {
                 throw new Error('Failed to save assessment');
             }
-            setSaveMessage('Avaliação salva no histórico.');
+            setSaveMessage('Assessment saved to history.');
         } catch (err) {
-            setSaveMessage('Não foi possível salvar no histórico. Tente novamente.');
+            setSaveMessage('Unable to save to history. Please try again.');
         } finally {
             setIsSaving(false)
         }
@@ -381,7 +381,7 @@ const results = () => {
                                 Save file
                         </button>
                         <button className='btn' onClick={() => saveToHistory()} disabled={isSaving}>
-                                Salvar no histórico
+                                Save to history
                         </button>
                         {saveMessage && <p className="historySaveMessage">{saveMessage}</p>}
                         <h2 className="jsonDownload">Do you wish to load your previous results to compare?</h2>
