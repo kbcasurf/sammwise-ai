@@ -40,14 +40,14 @@ function handleGet(req, res) {
         let query = 'SELECT id, company_name, project_name, overall_score, created_at FROM assessments WHERE 1=1';
         const params = {};
         if (company) {
-            query += ' AND company_name = @company';
-            params.company = company;
+            query += ' AND company_name LIKE @company';
+            params.company = `%${company}%`;
         }
         if (project) {
-            query += ' AND project_name = @project';
-            params.project = project;
+            query += ' AND project_name LIKE @project';
+            params.project = `%${project}%`;
         }
-        query += ' ORDER BY created_at DESC';
+        query += ' ORDER BY created_at DESC, id DESC';
         const rows = db.prepare(query).all(params);
         return res.status(200).json(rows);
     } catch (err) {
