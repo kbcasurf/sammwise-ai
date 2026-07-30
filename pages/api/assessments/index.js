@@ -37,7 +37,7 @@ function handlePost(req, res) {
 function handleGet(req, res) {
     const { company, project } = req.query;
     try {
-        let query = 'SELECT id, company_name, project_name, overall_score, created_at FROM assessments WHERE 1=1';
+        let query = 'SELECT id, company_name, project_name, overall_score, created_at, (gap_analysis_report IS NOT NULL) AS has_gap_analysis_report FROM assessments WHERE 1=1';
         const params = {};
         if (company) {
             query += ' AND company_name LIKE @company';
