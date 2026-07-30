@@ -39,7 +39,6 @@
     }
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.6",
     "@playwright/test": "^1.62.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.12",
