@@ -313,8 +313,34 @@ footer {
     width: 90% !important;
     height: 15cm !important;
   }
-  #totalsbargraph {margin-bottom: 3cm;} 
+  #totalsbargraph {margin-bottom: 3cm;}
  /* Hide the website name and date*/
   /* @page :first { margin: 0mm; font-size: 12pt;  } */
   @page{margin: 0.5mm;}
-} 
+}
+
+.historyFilters input {
+  margin-right: 10px;
+  padding: 6px;
+}
+
+.historyTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.historyTable th,
+.historyTable td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.historyError {
+  color: red;
+}
+
+.historySaveMessage {
+  color: #18a689;
+}
