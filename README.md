@@ -22,6 +22,18 @@ The mission of OWASP Software Assurance Maturity Model (SAMM) is to be the prime
 
 SAMMwise is an open source Web App to calculate the Maturity score of an individual, enterprise, or project using the SAMM model. The application walks you through the assessment, allows you to save and re-use previously completed assessments, and presents the results in a similar style to the spreadsheet.
 
+> ⚠️ **Security note — Gap Analysis Report (optional feature).** SAMMwise can optionally
+> send your assessment's maturity scores and multiple-choice answers to an external LLM
+> provider to generate an advisory gap analysis report. No company name, project name, or
+> description is ever included in that request. Only enable this if you understand and
+> accept that exposure:
+>
+> - **Prefer a local/self-hosted LLM** on your own network so assessment data never leaves
+>   your perimeter. For hosted providers, require a no-training data policy and check data
+>   residency (LGPD/GDPR).
+> - **Ensure valid end-to-end HTTPS/TLS** so the request is encrypted in transit.
+> - **In corporate environments, make this a security-team decision.**
+
 ## Getting Started
 
 The quickest way to get up and running is to pull down the image from dockerhub using the following commands:  
