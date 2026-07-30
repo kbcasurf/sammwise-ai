@@ -82,6 +82,7 @@ const results = () => {
     const[showPrevious, setShowPrevious] = useState(false)
     const[saveMessage, setSaveMessage] = useState('')
     const componentRef = useRef();
+    const router = useRouter();
     const handlePrint = useReactToPrint({ contentRef: componentRef });
     const reducer = (prevValue, currValue) => prevValue + currValue;
     function reloadPage(){
@@ -106,9 +107,26 @@ const results = () => {
     }
 
         useEffect( () => {
-            
+            if (!router.isReady) return;
+
+            async function loadResults() {
+
             const sessionData = sessionStorage.getItem('dataResults');
-            const previousData = sessionStorage.getItem('prevResults');
+            let previousData = sessionStorage.getItem('prevResults');
+
+            const compareId = router.query.compareId;
+            if (!previousData && compareId) {
+                try {
+                    const response = await fetch(`/api/assessments/${compareId}`);
+                    if (response.ok) {
+                        const record = await response.json();
+                        previousData = JSON.stringify(record.data);
+                    }
+                } catch (err) {
+                    console.error('Failed to load comparison assessment', err);
+                }
+            }
+
             const assessmentSessionStateData = JSON.parse(sessionStorage.getItem('assessmentState'));
             
             
@@ -273,7 +291,10 @@ const results = () => {
                 
                 completionText = 'You must first complete the questionnaire to see results'
             }
-        }, [])
+            }
+
+            loadResults();
+        }, [router.isReady, router.query.compareId])
             
                            
            return(
