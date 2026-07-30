@@ -21,6 +21,7 @@ var completionText
 var dataENV = []
 var finalScore = [0,0]
 var percentageScore = 0
+var overallScoreRaw = null
 var projectName 
 var projectDesc 
 var companyname = "Results"
@@ -79,11 +80,29 @@ const results = () => {
     
     const[display,setDisplay] = useState(0)
     const[showPrevious, setShowPrevious] = useState(false)
+    const[saveMessage, setSaveMessage] = useState('')
     const componentRef = useRef();
     const handlePrint = useReactToPrint({ contentRef: componentRef });
     const reducer = (prevValue, currValue) => prevValue + currValue;
     function reloadPage(){
         location.reload();
+    }
+
+    async function saveToHistory(){
+        setSaveMessage('')
+        try {
+            const response = await fetch('/api/assessments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: dataENV[0], overallScore: overallScoreRaw }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to save assessment');
+            }
+            setSaveMessage('Avaliação salva no histórico.');
+        } catch (err) {
+            setSaveMessage('Não foi possível salvar no histórico. Tente novamente.');
+        }
     }
 
         useEffect( () => {
@@ -229,7 +248,10 @@ const results = () => {
                             //  }
                         }
                         finalScore[dataNum]= testCalc.overallScore.toFixed(2);
-                        
+                        if (dataNum === 0) {
+                            overallScoreRaw = testCalc.overallScore;
+                        }
+
                         percentageScore = (finalScore[dataNum] /3).toFixed(2);
                         console.log(percentageScore)
                         
@@ -310,6 +332,10 @@ const results = () => {
                             onClick={()=> saveText(JSON.stringify(dataENV[0]), JSON.stringify(companyname)+JSON.stringify(projectName)+".json")}>
                                 Save file
                         </button>
+                        <button className='btn' onClick={() => saveToHistory()}>
+                                Salvar no histórico
+                        </button>
+                        {saveMessage && <p className="historySaveMessage">{saveMessage}</p>}
                         <h2 className="jsonDownload">Do you wish to load your previous results to compare?</h2>
                         <InputFile fileName = 'prevResults' className="jsonDownload"/>
                     </div>
