@@ -35,7 +35,7 @@ const GapAnalysisReport = ({ visible, loading, error, report, practiceScores, on
                                     .join(', ')}
                             </p>
                         )}
-                        {report.gaps.length === 0 ? (
+                        {!Array.isArray(report.gaps) || report.gaps.length === 0 ? (
                             <p>No significant gaps identified.</p>
                         ) : (
                             <table className="gapAnalysisTable">

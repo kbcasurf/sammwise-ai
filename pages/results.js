@@ -18,6 +18,7 @@ import assessmentCalculator from '../comps/surveyDisplay/graphs/testCalculator';
 import SurveyButton from '../comps/buttons/surveybuttons';
 import GapAnalysisConsent from '../comps/gapAnalysis/GapAnalysisConsent';
 import GapAnalysisReport from '../comps/gapAnalysis/GapAnalysisReport';
+import { getTestCalculatorPracticeAlias } from '../lib/gapAnalysis/sammQuestionMap';
 
 var completionText
 var dataENV = []
@@ -126,6 +127,7 @@ const results = () => {
     }
 
     async function handleGenerateReport(){
+        if (reportLoading) return;
         setConsentVisible(false)
         setReportVisible(true)
         setReportLoading(true)
@@ -370,7 +372,7 @@ const results = () => {
                         if (dataNum === 0) {
                             overallScoreRaw = testCalc.overallScore;
                             const scoresByName = {};
-                            testCalc.practiceNames.forEach((name, idx) => { scoresByName[name] = testCalc.practiceScores[idx]; });
+                            testCalc.practiceNames.forEach((name, idx) => { scoresByName[getTestCalculatorPracticeAlias(name)] = testCalc.practiceScores[idx]; });
                             setPracticeScoresByName(scoresByName);
                         }
 

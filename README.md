@@ -33,6 +33,11 @@ SAMMwise is an open source Web App to calculate the Maturity score of an individ
 >   residency (LGPD/GDPR).
 > - **Ensure valid end-to-end HTTPS/TLS** so the request is encrypted in transit.
 > - **In corporate environments, make this a security-team decision.**
+> - **This endpoint has no authentication or rate limiting** (consistent with the rest
+>   of SAMMwise, but unlike every other route, each call here costs real money via your
+>   configured AI provider). Any visitor who can reach a deployment with this feature
+>   enabled can trigger unlimited billed provider calls. In any shared/public
+>   deployment, run it behind an authenticating proxy or add external rate limiting.
 
 ## Getting Started
 

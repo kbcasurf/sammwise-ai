@@ -127,6 +127,92 @@ describe('analyzeAnswers', () => {
         expect(options.headers['anthropic-version']).toBe('2023-06-01');
     });
 
+    test('applies AI_PROVIDER_EXTRA_BODY to the openai request body', async () => {
+        const fetchDep = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ choices: [{ message: { content: '{"summary":"s","gaps":[]}' } }] })
+        });
+        await analyzeAnswers(
+            { answers: { question1: 1, question2: 1, question3: 1 } },
+            {
+                configDep: () => fakeConfig({ extraBody: '{"temperature":0.2}' }),
+                questionMapDep: fakeQuestionMap,
+                fetchDep
+            }
+        );
+        const [, options] = fetchDep.mock.calls[0];
+        const body = JSON.parse(options.body);
+        expect(body.temperature).toBe(0.2);
+    });
+
+    test('applies AI_PROVIDER_EXTRA_BODY to the anthropic request body', async () => {
+        const fetchDep = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ content: [{ type: 'text', text: '{"summary":"s","gaps":[]}' }] })
+        });
+        await analyzeAnswers(
+            { answers: { question1: 1, question2: 1, question3: 1 } },
+            {
+                configDep: () => fakeConfig({ apiFormat: 'anthropic', extraBody: '{"temperature":0.2}' }),
+                questionMapDep: fakeQuestionMap,
+                fetchDep
+            }
+        );
+        const [, options] = fetchDep.mock.calls[0];
+        const body = JSON.parse(options.body);
+        expect(body.temperature).toBe(0.2);
+    });
+
+    test('required fields survive even if extraBody tries to override them (openai)', async () => {
+        const fetchDep = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ choices: [{ message: { content: '{"summary":"s","gaps":[]}' } }] })
+        });
+        await analyzeAnswers(
+            { answers: { question1: 1, question2: 1, question3: 1 } },
+            {
+                configDep: () => fakeConfig({
+                    model: 'real-model',
+                    maxTokens: 500,
+                    extraBody: '{"model":"hijacked-model","max_tokens":1,"messages":[]}'
+                }),
+                questionMapDep: fakeQuestionMap,
+                fetchDep
+            }
+        );
+        const [, options] = fetchDep.mock.calls[0];
+        const body = JSON.parse(options.body);
+        expect(body.model).toBe('real-model');
+        expect(body.max_tokens).toBe(500);
+        expect(body.messages.length).toBeGreaterThan(0);
+    });
+
+    test('required fields survive even if extraBody tries to override them (anthropic)', async () => {
+        const fetchDep = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ content: [{ type: 'text', text: '{"summary":"s","gaps":[]}' }] })
+        });
+        await analyzeAnswers(
+            { answers: { question1: 1, question2: 1, question3: 1 } },
+            {
+                configDep: () => fakeConfig({
+                    apiFormat: 'anthropic',
+                    model: 'real-model',
+                    maxTokens: 500,
+                    extraBody: '{"model":"hijacked-model","max_tokens":1,"system":"hijacked","messages":[]}'
+                }),
+                questionMapDep: fakeQuestionMap,
+                fetchDep
+            }
+        );
+        const [, options] = fetchDep.mock.calls[0];
+        const body = JSON.parse(options.body);
+        expect(body.model).toBe('real-model');
+        expect(body.max_tokens).toBe(500);
+        expect(body.system).not.toBe('hijacked');
+        expect(body.messages.length).toBeGreaterThan(0);
+    });
+
     test('marks an incomplete practice and excludes it from the prompt', async () => {
         const fetchDep = jest.fn().mockResolvedValue({
             ok: true,

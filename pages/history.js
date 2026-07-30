@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { Line } from 'react-chartjs-2';
 import assessmentCalculator from '../comps/surveyDisplay/graphs/testCalculator';
 import GapAnalysisReport from '../comps/gapAnalysis/GapAnalysisReport';
+import { getTestCalculatorPracticeAlias } from '../lib/gapAnalysis/sammQuestionMap';
 
 // created_at is stored as an SQLite CURRENT_TIMESTAMP string (e.g. '2026-07-30 01:09:13')
 // which is UTC but carries no timezone designator. `new Date(str)` on a designator-less
@@ -77,22 +78,29 @@ const History = () => {
     }
 
     async function handleViewReport(id) {
-        const response = await fetch(`/api/assessments/${id}`);
-        if (!response.ok) {
+        try {
+            const response = await fetch(`/api/assessments/${id}`);
+            if (!response.ok) {
+                setError('Unable to load the gap analysis report.');
+                setReportModalVisible(false);
+                setViewedReport(null);
+                setViewedPracticeScores({});
+                return;
+            }
+            const record = await response.json();
+            const calc = new assessmentCalculator(record.data);
+            calc.computeResults();
+            const scoresByName = {};
+            calc.practiceNames.forEach((name, idx) => { scoresByName[getTestCalculatorPracticeAlias(name)] = calc.practiceScores[idx]; });
+            setViewedPracticeScores(scoresByName);
+            setViewedReport(record.gapAnalysisReport);
+            setReportModalVisible(true);
+        } catch (err) {
             setError('Unable to load the gap analysis report.');
             setReportModalVisible(false);
             setViewedReport(null);
             setViewedPracticeScores({});
-            return;
         }
-        const record = await response.json();
-        const calc = new assessmentCalculator(record.data);
-        calc.computeResults();
-        const scoresByName = {};
-        calc.practiceNames.forEach((name, idx) => { scoresByName[name] = calc.practiceScores[idx]; });
-        setViewedPracticeScores(scoresByName);
-        setViewedReport(record.gapAnalysisReport);
-        setReportModalVisible(true);
     }
 
     const chronological = assessments.slice().reverse();
