@@ -1,0 +1,73 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 10
+    groups:
+      npm-version:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+          - "minor"
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 10
+    groups:
+      docker-version:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+          - "minor"
+      docker-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+
+  - package-ecosystem: "github-actions"
+    directory: ".github/workflows"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 10
+    groups:
+      actions-version:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+          - "minor"
+      actions-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
