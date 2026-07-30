@@ -344,3 +344,82 @@ footer {
 .historySaveMessage {
   color: #18a689;
 }
+
+.gapAnalysisOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.gapAnalysisModal {
+  background: white;
+  border-radius: 6px;
+  padding: 24px;
+  max-width: 700px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.gapAnalysisReportModal {
+  max-width: 960px;
+}
+
+.gapAnalysisCheckboxLabel {
+  display: block;
+  margin: 16px 0;
+}
+
+.gapAnalysisModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.gapAnalysisAdvisory {
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.gapAnalysisTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.gapAnalysisTable th,
+.gapAnalysisTable td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.gapAnalysisIncomplete {
+  color: #777;
+  font-style: italic;
+}
+
+.gapAnalysisPriorityHigh {
+  color: #c0392b;
+  font-weight: bold;
+}
+
+.gapAnalysisPriorityMedium {
+  color: #d68910;
+  font-weight: bold;
+}
+
+.gapAnalysisPriorityLow {
+  color: #1a7a4c;
+}
