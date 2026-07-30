@@ -3,6 +3,17 @@ import styles from '../styles/Home.module.css'
 import React from 'react'
 import { useEffect } from 'react'
 
+function initialiseAssessmentState(statePointer){
+  //Fill assessment state as 0 (all qs are initially empty)
+  for(let i = 1; i < 91; i++){
+      var key_name = 'question' + i;
+      statePointer[key_name] = null;
+  }
+  statePointer['Company Name'] = null;
+  statePointer['Project name'] = null;
+  statePointer['Description of Project'] = null;
+}
+
 export default function Home() {
   useEffect(()=>{
 
@@ -27,21 +38,9 @@ export default function Home() {
       uState['has_switched_page'] = true;
       uState['page'] = 'homePage';
       sessionStorage.setItem('userState', JSON.stringify(uState));
-    } 
-  })
-  
-  
-  function initialiseAssessmentState(statePointer){
-    //Fill assessment state as 0 (all qs are initially empty)
-    for(let i = 1; i < 91; i++){
-        var key_name = 'question' + i;
-        statePointer[key_name] = null;
     }
-    statePointer['Company Name'] = null;
-    statePointer['Project name'] = null;
-    statePointer['Description of Project'] = null;
-  }
-  
+  })
+
   return (
     <>
     <Head>
@@ -54,12 +53,12 @@ export default function Home() {
           <li className = {styles.paragraph}>	Enter responses for a single assessment</li>
           <li className = {styles.paragraph}>	Visualize the maturity results based on entered responses</li>
           <li className = {styles.paragraph}>	Compare maturity results to those for a previous assessment</li>
-          <p className = {styles.paragraph}> Assessment responses can be saved to the user's local computer, in a JSON-formatted text file. Responses are retained only on the local system and are not shared with any other system or persons.
+          <p className = {styles.paragraph}> Assessment responses can be saved to the user&apos;s local computer, in a JSON-formatted text file. Responses are retained only on the local system and are not shared with any other system or persons.
 
       </p>
 
       <h1 className = {styles.title}>About SAMM</h1>
-      <p className = {styles.paragraph}>The Open Web Application Security Project's Software Assurance Maturity Model (OWASP SAMM) is an open framework to help organizations formulate and implement a strategy for software security, tailored to the specific risks facing the organization.  </p>
+      <p className = {styles.paragraph}>The Open Web Application Security Project&apos;s Software Assurance Maturity Model (OWASP SAMM) is an open framework to help organizations formulate and implement a strategy for software security, tailored to the specific risks facing the organization.  </p>
       <p className = {styles.paragraph}>The resources provided by SAMM (including this tool) are intended to aid in: </p>
           <li className = {styles.paragraph}>		Evaluating an organization’s existing software security practices;</li>
           <li className = {styles.paragraph}>		Building toward a balanced software security assurance program in well-defined iterations;</li>

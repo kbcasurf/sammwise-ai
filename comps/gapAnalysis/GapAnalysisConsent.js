@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const GapAnalysisConsent = ({ visible, onCancel, onConfirm }) => {
     const [accepted, setAccepted] = useState(false);
+    const [prevVisible, setPrevVisible] = useState(visible);
 
-    useEffect(() => {
+    if (visible !== prevVisible) {
+        setPrevVisible(visible);
         if (visible) {
             setAccepted(false);
         }
-    }, [visible]);
+    }
 
     if (!visible) {
         return null;

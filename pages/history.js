@@ -59,7 +59,10 @@ const History = () => {
     }, [debouncedCompany, debouncedProject]);
 
     useEffect(() => {
-        fetchAssessments();
+        function run() {
+            fetchAssessments();
+        }
+        run();
     }, [fetchAssessments]);
 
     async function handleDelete(id) {

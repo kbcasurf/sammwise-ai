@@ -8,24 +8,6 @@ import styles from '../styles/navbar.module.css'
 const SurveyNav = (props) => {
 
     const[display, setDisplay] = useState(false)
-    useEffect(() => {
-        var navbarState = sessionStorage.getItem('navbarState');
-        // Direct navigation to /assessment (deep link, bookmark, fresh tab) skips
-        // the Home page, which is what normally seeds sessionStorage's userState.
-        var userState = JSON.parse(sessionStorage.getItem('userState')) || {};
-        var currentNavbarState = getNavbarState();
-        if (navbarState != currentNavbarState){
-            if(!(userState['has_switched_page'])){
-                navbarState = currentNavbarState;
-                sessionStorage.setItem('navbarState', navbarState);
-            }
-        }
-        
-
-    },[display])
-    console.log("this is the button state: " + props.button)
-
-    
 
     const buttonState = [{name:"Governance",state:true},
                          {name:"Design", state:false},
@@ -34,11 +16,12 @@ const SurveyNav = (props) => {
                          {name:"Operations", state:false},
                          {name:"Details", state:false}]
 
-    function updateButtonState(index){
-        props.onClick(buttonState[index].name);
-        setDisplay(!display);
-    }
-    
+    for (const key in buttonState) {
+           buttonState[key].state = false
+           if(buttonState[key].name == props.button){
+            buttonState[key].state = true
+           }
+        }
 
     function getNavbarState(){
         for (const key in buttonState){
@@ -48,17 +31,32 @@ const SurveyNav = (props) => {
         }
     }
 
-    
-    for (const key in buttonState) {
-           const element = buttonState[key] 
-           buttonState[key].state = false
-           if(buttonState[key].name == props.button){
-            buttonState[key].state = true
-           } 
-          // console.log("element: "+ element.state +"key: "+ key)   
+    // Primitive snapshot (not the array/function references, which are recreated every
+    // render) so the effect's dependency comparison is meaningful.
+    const currentNavbarState = getNavbarState();
+
+    useEffect(() => {
+        var navbarState = sessionStorage.getItem('navbarState');
+        // Direct navigation to /assessment (deep link, bookmark, fresh tab) skips
+        // the Home page, which is what normally seeds sessionStorage's userState.
+        var userState = JSON.parse(sessionStorage.getItem('userState')) || {};
+        if (navbarState != currentNavbarState){
+            if(!(userState['has_switched_page'])){
+                navbarState = currentNavbarState;
+                sessionStorage.setItem('navbarState', navbarState);
+            }
         }
-    
-    return (<> 
+
+
+    },[display, currentNavbarState])
+    console.log("this is the button state: " + props.button)
+
+    function updateButtonState(index){
+        props.onClick(buttonState[index].name);
+        setDisplay(!display);
+    }
+
+    return (<>
         <nav className = {styles.pageNav}>
             <NavButton  name ={buttonState[0].name} state={buttonState[0].state}    onClick={()=>updateButtonState(0)}/>
             <NavButton  name ={buttonState[1].name} state={buttonState[1].state}    onClick={()=>updateButtonState(1)}/>

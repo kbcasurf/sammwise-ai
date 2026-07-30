@@ -1,6 +1,6 @@
 import React,{useCallback, useState,useEffect} from 'react'
 import Mysurvey from '../surveyTypes/surveytypeone'
-import router, {useRouter} from 'next/router'
+import {useRouter} from 'next/router'
 
 
 // Function to save data to file on local computer 
@@ -15,7 +15,7 @@ const SurveyOne = () => {
         sessionStorage.setItem('dataResults',JSON.stringify(data))
         router.push('/results')
         setShowPage(!showPage)
-    },[showPage])
+    },[showPage, router])
 // display the final page
 
     return ( 

@@ -1,18 +1,15 @@
-// to use later 
+// to use later
 // aim of this is to add a simplified percentage done bar
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 
 
 
 const ProgressDiv = () => {
-   
-    const [page, setPage] = useState('')
-    
-    useEffect(() => {
-        const pageName = sessionStorage.getItem('currentPage')
-        setPage(pageName)
-    }, [])
+
+    const [page] = useState(() =>
+        typeof window === 'undefined' ? '' : sessionStorage.getItem('currentPage')
+    )
 
     return (
         <>

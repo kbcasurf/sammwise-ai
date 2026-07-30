@@ -59,7 +59,7 @@ const InputFile = (props) => {
             } 
         });
         
-    },[],
+    },[props.fileName],
 
     )
 

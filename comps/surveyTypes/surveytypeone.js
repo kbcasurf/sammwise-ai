@@ -2,7 +2,7 @@
 
 //TODO: make the panels buttons part of an outside function
 
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 // Idiomatic package-subpath import resolves fine as of Next 16 / survey-core 2.5.x.
 import 'survey-core/survey-core.css';
 import { Model } from 'survey-core';
@@ -13,13 +13,16 @@ import InputFile from '../inputfile';
 import SurveyNav from '../surveynav';
 import DropButton from '../buttons/dropdownbutton';
 import SurveyButton from '../buttons/surveybuttons';
-import router, {useRouter} from 'next/router'
+import {useRouter} from 'next/router'
 import question_desc from '../surveys/question_desc';
 
 // import saveText from '../saveResponses';
 
 
 const survey = new Model(Json());
+//FirstPage doesn't count as changed page so set to false
+survey.showNavigationButtons = "none";
+
 var isDropDownButtonClicked = false;
 
 function formatDate(date) {
@@ -59,6 +62,233 @@ function addClassOnce(current, cls) {
     return tokens.join(" ");
 }
 
+function isChangedPage(userStateData){
+    if (userStateData != 'assessmentPage'){
+        return true;
+    } else {
+        return false
+    }
+}
+
+// Registers the survey-core panel/page listeners exactly once, at module load, tied to
+// the module-level `survey` singleton -- not to any particular Mysurvey render/mount.
+// survey-react-ui fires its first onAfterRenderPanel synchronously while mounting
+// (before any component's effects run), so these listeners must already be in place by
+// then; registering them in a component effect is too late for the very first panel.
+// survey-core's EventBase.add() also has no de-duplication, so re-registering these
+// closures on every render (the previous approach) silently accumulated one extra
+// listener per render for the lifetime of the component.
+var pageChanged = false;
+var panels = [];
+var curr_panel_names = [];
+var panelStateMap = new Map()
+var panelElementMap = new Map()
+var all_pages = survey.pages;
+var page_names = [];
+
+for(let i = 0; i < all_pages.length; i++){
+    page_names.push(all_pages[i].name)
+}
+var currPageIndex = 1 // Initialise at one because of "page1"
+
+//Reloads arrays with page panel data
+function append_panel_data(in_data){
+    for(let i = 0; i < in_data.length;i++){
+        curr_panel_names.push(in_data[i].name);
+        panels.push(in_data[i]);
+    }
+}
+
+survey.onCurrentPageChanged.add(function(survey, option){
+    if (panels.length > 0 && curr_panel_names.length > 0){
+        panels.length= 0;
+        curr_panel_names.length = 0;
+        panelStateMap.clear();
+    }
+    pageChanged = true;
+    var currPage = option.newCurrentPage;
+
+    append_panel_data(currPage.getPanels());
+   // currPageIndex = page_names.indexOf(currPage.name);
+
+});
+
+var page;
+if(!(pageChanged)){
+    page = survey.currentPage;
+    append_panel_data(page.getPanels())
+}
+
+survey.onAfterRenderPanel.add(function(survey, options){
+    var rendered_panel = options.panel.name;
+    panelElementMap.set(rendered_panel, options.htmlElement);
+
+    var index = curr_panel_names.indexOf(rendered_panel);
+    var currentPanel = panels[index];
+    var curr_page_no = survey.currentPageNo + 1;
+    if (curr_page_no < all_pages.length){
+        var nextPageName = all_pages[curr_page_no + 1].name;
+    }
+
+    function panelInPage(checkPanel){
+        if(curr_panel_names.indexOf(checkPanel) > -1){
+            return true;
+        }
+    }
+
+    function panelScroll(targetPanelName){
+        var target = panelElementMap.get(targetPanelName);
+        if (target){
+            target.scrollIntoView({
+                behavior: "smooth"
+            });
+        }
+    }
+
+    function isFirstPanel(index){
+        if (index == 0){
+            return true;
+        } else{
+            return false;
+        }
+    }
+
+    function isLastPanel(index){
+        if (index == 2){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function createPanelButton(button_type, btnID){
+        var btn = document.createElement('button');
+        btn.type = "button";
+        btn.className = "btn btn-info btn-xs";
+        btn.id = btnID;
+        btn.innerHTML = button_type;
+        // Insert buttons into html document
+        var header = options.htmlElement;
+        var span = document.createElement("span");
+        span.id = rendered_panel+"panel";
+        span.class = 'span';
+        span.innerHTML = "  ";
+        header.appendChild(span);
+        header.appendChild(btn);
+        return btn
+    }
+
+    function deleteButton(btn, btnID){
+        btn.remove();
+        var span_id = rendered_panel + "panel";
+        var span_rem = document.getElementById(span_id)
+        span_rem.remove();
+    }
+
+    // Assert panel is in the current page and isDropDownButtonClicked is not true (i.e., false)
+    if(panelInPage(rendered_panel) && (!isDropDownButtonClicked)){
+        var nextID = rendered_panel + "NextNavigator";
+        var prevID = rendered_panel + "PrevNavigator";
+
+
+        if (currentPanel.isCollapsed == true){
+            // initialise panel as a key if not in stateMap
+            if (!(panelStateMap.has(rendered_panel))){
+                panelStateMap.set(rendered_panel, false)
+            } else{
+                var nbutton = document.getElementById(nextID)
+                if (nbutton != null){
+                    deleteButton(nbutton, nextID);
+                }
+                //Only panels 2 and 3 have prevPanel buttons
+                if (!(isFirstPanel(index))){
+                    var pbutton = document.getElementById(prevID);
+                    if (pbutton != null){
+                        pbutton.remove();
+                    }
+                }
+            }
+        } else if(currentPanel.isCollapsed == false){
+            // Do not apply scroll animation to first panel when page loads
+            if (!(isFirstPanel(index) && !(panelStateMap.has(rendered_panel)))){
+                panelScroll(rendered_panel);
+            }
+
+            // Check if button exists before appending. Only next button checked because it applies to all panels.
+            if(document.getElementById(nextID) == null){
+                var nextbtnText;
+
+                if(isLastPanel(index)){
+                    nextbtnText = "Next Page";
+                } else{
+                    nextbtnText = "Next Practice";
+                }
+
+                var prevPanel = index - 1;
+                if (!(isFirstPanel(index))){
+                    if(document.getElementById(prevID) == null){
+                        var prevbtn = createPanelButton("Previous Practice", prevID);
+                        prevbtn.onclick = function () {
+                            panels[index].collapse();
+                            panels[prevPanel].expand();
+                            panelScroll(panels[prevPanel].name)
+                        }
+                    }
+                }
+                var nextPanel = panels[index + 1];
+
+                // Next Panel button logic -> applied based on panel index. If last panel => go to next page.
+                if(index < 2){
+                    var nextbtn = createPanelButton(nextbtnText, nextID);
+                    nextbtn.onclick = function () {
+                        nextPanel.expand();
+                        currentPanel.collapse();
+                        panelScroll(nextPanel.name);
+                    }
+                }
+                // } else{
+                //     nextbtn.onclick = function () {
+                //         // nextPage(nextPageName);
+                //         changePage(nextPageName);
+                //     }
+                // }
+                // Set panel "open" state to true
+                panelStateMap.set(rendered_panel, true)
+            }
+        }
+    }
+    if(isLastPanel(index) && isDropDownButtonClicked){
+        isDropDownButtonClicked = false
+    }
+
+});
+
+survey.onUpdateQuestionCssClasses.add(function(survey, options) {
+    var classes = options.cssClasses
+    classes.mainRoot = addClassOnce(classes.mainRoot, "sv_qstn");
+    classes.root = "sq-root";
+    classes.title = addClassOnce(classes.title, "sq-title");
+    classes.description ="sq-description";
+    classes.item = addClassOnce(classes.item, "sq-item");
+    classes.label = addClassOnce(classes.label, "sq-label");
+
+    if (options.question.isRequired) {
+        classes.title = addClassOnce(classes.title, "sq-title-required");
+        classes.root = addClassOnce(classes.root, "sq-root-required");
+    }
+    if (options.question.getType() === "checkbox") {
+        classes.root = addClassOnce(classes.root, "sq-root-cb");
+    }
+});
+
+survey.onValueChanged.add(function(survey, options){
+    const assessmentStateData = JSON.parse(sessionStorage.getItem('assessmentState'));
+    var question_answered = String(options.name);
+    var answer_value = options.value;
+    assessmentStateData[question_answered] = answer_value;
+    sessionStorage.setItem('assessmentState', JSON.stringify(assessmentStateData));
+})
+
 const Mysurvey = (prop) => {
     
     const [surveyState,setSurvey] = useState(survey);
@@ -75,57 +305,115 @@ const Mysurvey = (prop) => {
     const pageStateRef = useRef(pageState);
     useEffect(() => { pageStateRef.current = pageState; }, [pageState]);
 
+    // Function that changes page and sets the state of buttons on the navbar
+    const changePage = useCallback(function changePage(pageName){
+
+        if(pageName != "next"){
+            survey.currentPage = pageName
+        }
+        else{
+
+                if(survey.currentPageNo == 0){
+                    pageName = "Design";
+
+                }
+                else if(survey.currentPageNo == 1){
+                    pageName = "Implementation";
+                }
+                else if(survey.currentPageNo == 2){
+                    pageName = "Verification";
+
+                }
+                else if(survey.currentPageNo == 3){
+                    pageName = "Operations";
+
+                }
+                else if(survey.currentPageNo == 4){
+
+
+                    pageName = "Details";
+                    setDetailsPage(true)
+
+                }else if(survey.currentPageNo == 5){
+
+                    // setSurvey(survey);
+                    // setDisplay(!display);
+                    pageName = "Details";
+                    setDetailsPage(true)
+                    router.push('/results');
+                    // survey.completeLastPage();
+
+                }else{
+                    setDetailsPage(true);
+                }
+            survey.currentPage = pageName;
+        }
+        if(pageName == "Details"){
+            setDetailsPage(true)
+        } else{
+            setDetailsPage(false)
+        }
+        setPageState(pageName);
+        var navBarState = sessionStorage.getItem('navbarState');
+        navBarState = pageName;
+        sessionStorage.setItem('navbarState', navBarState);
+        setSurvey(survey);
+
+    }, [router]);
+
     //Use Effect for populating the Survey with predefined answerd from a file or from previously answered survey
     useEffect(() => {
-        
-        var loadedResults = JSON.parse(sessionStorage.getItem('loadedResults'));
-        var assessmentState = JSON.parse(sessionStorage.getItem('assessmentState'))
-        // Direct navigation to /assessment (deep link, bookmark, fresh tab) skips
-        // the Home page, which is what normally seeds sessionStorage's userState.
-        var userState = JSON.parse(sessionStorage.getItem('userState')) || {};
-        userState['page'] = 'assessmentPage';
-        userState['has_switched_page'] = false;
+        function syncSurveyState() {
+            var loadedResults = JSON.parse(sessionStorage.getItem('loadedResults'));
+            var assessmentState = JSON.parse(sessionStorage.getItem('assessmentState'))
+            // Direct navigation to /assessment (deep link, bookmark, fresh tab) skips
+            // the Home page, which is what normally seeds sessionStorage's userState.
+            var userState = JSON.parse(sessionStorage.getItem('userState')) || {};
+            userState['page'] = 'assessmentPage';
+            userState['has_switched_page'] = false;
 
-        if(loadedResults){
-            sessionStorage.setItem('assessmentState', JSON.stringify(loadedResults));
+            if(loadedResults){
+                sessionStorage.setItem('assessmentState', JSON.stringify(loadedResults));
 
-            for (const key in loadedResults) {   
-                    if(key.includes("question") && (loadedResults[key] == 0 || 0.25 || 0.5 || 1 )){
-                        assessmentState[key] = loadedResults[key]
-                        survey.setValue(key,loadedResults[key])
-                    }else if(typeof(key == 'string')){
-                        assessmentState[key] = loadedResults[key]
-                        survey.setValue(key,loadedResults[key])
-                    }
+                for (const key in loadedResults) {
+                        if(key.includes("question") && (loadedResults[key] == 0 || 0.25 || 0.5 || 1 )){
+                            assessmentState[key] = loadedResults[key]
+                            survey.setValue(key,loadedResults[key])
+                        }else if(typeof(key == 'string')){
+                            assessmentState[key] = loadedResults[key]
+                            survey.setValue(key,loadedResults[key])
+                        }
+                }
+                sessionStorage.removeItem('loadedResults')
             }
-            sessionStorage.removeItem('loadedResults')
-        }
-        if(assessmentState){ 
-            for (const key in assessmentState) {   
-                survey.setValue(key,assessmentState[key])
-            }    
-        }
-        
-        var navbar = sessionStorage.getItem('navbarState');
-        
-        
-        if(pageStateRef.current != navbar){
-            changePage(navbar);
-        }
-        
-        var userStateData = JSON.parse(sessionStorage.getItem('userState')) || {};
-        if(navbar == "Details"){
-            setDetailsPage(true);
-        }
+            if(assessmentState){
+                for (const key in assessmentState) {
+                    survey.setValue(key,assessmentState[key])
+                }
+            }
 
-        if (isChangedPage(userStateData['page'])){
-            userStateData['page'] = 'assessmentPage';
-            userStateData['has_switched_page'] = false;
-            sessionStorage.setItem('userState', JSON.stringify(userStateData));
-        } 
-        
-        setSurvey(survey);
-    }, [display])
+            var navbar = sessionStorage.getItem('navbarState');
+
+
+            if(pageStateRef.current != navbar){
+                changePage(navbar);
+            }
+
+            var userStateData = JSON.parse(sessionStorage.getItem('userState')) || {};
+            if(navbar == "Details"){
+                setDetailsPage(true);
+            }
+
+            if (isChangedPage(userStateData['page'])){
+                userStateData['page'] = 'assessmentPage';
+                userStateData['has_switched_page'] = false;
+                sessionStorage.setItem('userState', JSON.stringify(userStateData));
+            }
+
+            setSurvey(survey);
+        }
+        syncSurveyState();
+    }, [display, changePage])
 
 
 
@@ -149,7 +437,7 @@ const Mysurvey = (prop) => {
     } 
 
    
-    //Handling LoadResults dropDown button functions 
+    //Handling LoadResults dropDown button functions
     function handleDropDownButton(value){
         setDropDownState(value);
         isDropDownButtonClicked = true;
@@ -165,286 +453,6 @@ const Mysurvey = (prop) => {
         survey.currentPage = name;
         setSurvey(survey);
     }
-
-    // Function that changes page and sets the state of buttons on the navbar
-    function changePage(pageName){
-
-        if(pageName != "next"){
-            survey.currentPage = pageName
-        }
-        else{
-           
-                if(survey.currentPageNo == 0){
-                    pageName = "Design";
-                    
-                }
-                else if(survey.currentPageNo == 1){
-                    pageName = "Implementation";
-                }
-                else if(survey.currentPageNo == 2){
-                    pageName = "Verification";
-                    
-                }
-                else if(survey.currentPageNo == 3){  
-                    pageName = "Operations";
-
-                }
-                else if(survey.currentPageNo == 4){
-                    
-                    
-                    pageName = "Details";
-                    setDetailsPage(true)
-                    
-                }else if(survey.currentPageNo == 5){
-                    
-                    // setSurvey(survey);
-                    // setDisplay(!display);
-                    pageName = "Details";
-                    setDetailsPage(true)
-                    router.push('/results');
-                    // survey.completeLastPage();
-                    
-                }else{
-                    setDetailsPage(true);
-                }
-            survey.currentPage = pageName;
-        }
-        if(pageName == "Details"){
-            setDetailsPage(true)
-        } else{
-            setDetailsPage(false)
-        }
-        setPageState(pageName);
-        var navBarState = sessionStorage.getItem('navbarState');
-        navBarState = pageName;
-        sessionStorage.setItem('navbarState', navBarState);
-        setSurvey(survey);
-        
-    }
-
-    var pageChanged = false;
-    var panels= [];
-    var curr_panel_names = [];
-    var panelStateMap = new Map()
-    var panelElementMap = new Map()
-    var all_pages = survey.pages;
-    var page_names = [];
-    
-
-    for(let i = 0; i < all_pages.length; i++){
-        page_names.push(all_pages[i].name)
-
-    }
-    var currPageIndex = 1 // Initialise at one because of "page1"
-
-    //Reloads arrays with page panel data
-    function append_panel_data(in_data){
-        for(let i = 0; i < in_data.length;i++){
-            curr_panel_names.push(in_data[i].name);
-            panels.push(in_data[i]);
-        }
-    }
-
-
-    //FirstPage doesn't count as changed page so set to false
-    survey.showNavigationButtons = "none";
-    
-
-    survey.onCurrentPageChanged.add(function(survey, option){
-        if (panels.length > 0 && curr_panel_names.length > 0){
-            panels.length= 0;
-            curr_panel_names.length = 0;
-            panelStateMap.clear();
-        }
-        pageChanged = true;
-        var currPage = option.newCurrentPage;
-        
-        append_panel_data(currPage.getPanels());
-       // currPageIndex = page_names.indexOf(currPage.name);
-      
-    });
-    
-    var page;
-    if(!(pageChanged)){
-        page = survey.currentPage;
-        append_panel_data(page.getPanels())
-    }
-    
-    function getPanelHeaders(panelName){
-        var panelHeaderMap = JSON.parse(sessionStorage.getItem('practiceHeaders'));
-        return panelHeaderMap[panelName];
-    }
-
-    survey.onAfterRenderPanel.add(function(survey, options){
-        var rendered_panel = options.panel.name;
-        panelElementMap.set(rendered_panel, options.htmlElement);
-
-        var index = curr_panel_names.indexOf(rendered_panel);
-        var firstRender = false;
-        var currentPanel = panels[index];
-        var curr_page_no = survey.currentPageNo + 1;
-        if (curr_page_no < all_pages.length){
-            var nextPageName = all_pages[curr_page_no + 1].name;  
-        }
-
-        function panelInPage(checkPanel){
-            if(curr_panel_names.indexOf(checkPanel) > -1){
-                return true;
-            }
-        }
-
-        function panelScroll(targetPanelName){
-            var target = panelElementMap.get(targetPanelName);
-            if (target){
-                target.scrollIntoView({
-                    behavior: "smooth"
-                });
-            }
-        }
-
-        function isFirstPanel(index){
-            if (index == 0){
-                return true;
-            } else{
-                return false;
-            }
-        }
-
-        function isLastPanel(index){
-            if (index == 2){
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        function createPanelButton(button_type, btnID){
-            var btn = document.createElement('button');
-            btn.type = "button";
-            btn.className = "btn btn-info btn-xs";
-            btn.id = btnID;
-            btn.innerHTML = button_type;
-            // Insert buttons into html document
-            var header = options.htmlElement;
-            var span = document.createElement("span");
-            span.id = rendered_panel+"panel";
-            span.class = 'span';
-            span.innerHTML = "  ";
-            header.appendChild(span);
-            header.appendChild(btn);
-            return btn
-        }
-        
-        function deleteButton(btn, btnID){
-            btn.remove();
-            var span_id = rendered_panel + "panel";
-            var span_rem = document.getElementById(span_id)
-            span_rem.remove();
-        }
-        
-        // Assert panel is in the current page and isDropDownButtonClicked is not true (i.e., false) 
-        if(panelInPage(rendered_panel) && (!isDropDownButtonClicked)){
-            var nextID = rendered_panel + "NextNavigator";
-            var prevID = rendered_panel + "PrevNavigator";
-           
-            
-            if (currentPanel.isCollapsed == true){
-                // initialise panel as a key if not in stateMap
-                if (!(panelStateMap.has(rendered_panel))){
-                    panelStateMap.set(rendered_panel, false)
-                } else{
-                    var nbutton = document.getElementById(nextID)
-                    if (nbutton != null){
-                        deleteButton(nbutton, nextID);
-                    }
-                    //Only panels 2 and 3 have prevPanel buttons
-                    if (!(isFirstPanel(index))){
-                        var pbutton = document.getElementById(prevID);
-                        if (pbutton != null){
-                            pbutton.remove();
-                        }
-                    }
-                }
-            } else if(currentPanel.isCollapsed == false){
-                // Do not apply scroll animation to first panel when page loads
-                if (!(isFirstPanel(index) && !(panelStateMap.has(rendered_panel)))){
-                    panelScroll(rendered_panel);
-                } 
-            
-                // Check if button exists before appending. Only next button checked because it applies to all panels.
-                if(document.getElementById(nextID) == null){
-                    var nextbtnText;
-                    
-                    if(isLastPanel(index)){
-                        nextbtnText = "Next Page";
-                    } else{
-                        nextbtnText = "Next Practice";
-                    }
-                    
-                    var prevPanel = index - 1;
-                    if (!(isFirstPanel(index))){
-                        if(document.getElementById(prevID) == null){
-                            var prevbtn = createPanelButton("Previous Practice", prevID);
-                            prevbtn.onclick = function () {
-                                panels[index].collapse();
-                                panels[prevPanel].expand();
-                                panelScroll(panels[prevPanel].name)
-                            }
-                        }
-                    }
-                    var nextPanel = panels[index + 1];
-                    
-                    // Next Panel button logic -> applied based on panel index. If last panel => go to next page. 
-                    if(index < 2){
-                        var nextbtn = createPanelButton(nextbtnText, nextID);
-                        nextbtn.onclick = function () {
-                            nextPanel.expand();
-                            currentPanel.collapse();
-                            panelScroll(nextPanel.name);
-                        }
-                    }
-                    // } else{
-                    //     nextbtn.onclick = function () {
-                    //         // nextPage(nextPageName);
-                    //         changePage(nextPageName);
-                    //     }
-                    // }
-                    // Set panel "open" state to true 
-                    panelStateMap.set(rendered_panel, true)
-                }
-            }
-        }
-        if(isLastPanel(index) && isDropDownButtonClicked){
-            isDropDownButtonClicked = false
-        }
-    
-    });
-
-    survey.onUpdateQuestionCssClasses.add(function(survey, options) {
-        var classes = options.cssClasses
-        classes.mainRoot = addClassOnce(classes.mainRoot, "sv_qstn");
-        classes.root = "sq-root";
-        classes.title = addClassOnce(classes.title, "sq-title");
-        classes.description ="sq-description";
-        classes.item = addClassOnce(classes.item, "sq-item");
-        classes.label = addClassOnce(classes.label, "sq-label");
-
-    if (options.question.isRequired) {
-        classes.title = addClassOnce(classes.title, "sq-title-required");
-        classes.root = addClassOnce(classes.root, "sq-root-required");
-    }
-    if (options.question.getType() === "checkbox") {
-        classes.root = addClassOnce(classes.root, "sq-root-cb");
-    }
-    });
-
-    survey.onValueChanged.add(function(survey, options){
-        const assessmentStateData = JSON.parse(sessionStorage.getItem('assessmentState'));
-        var question_answered = String(options.name);
-        var answer_value = options.value;         
-        assessmentStateData[question_answered] = answer_value;
-        sessionStorage.setItem('assessmentState', JSON.stringify(assessmentStateData));
-    })
 
 
     function clearAnswers(){
@@ -470,17 +478,8 @@ const Mysurvey = (prop) => {
       
     }
 
-    
-    function isChangedPage(userStateData){
-        if (userStateData != 'assessmentPage'){
-            return true;
-        } else {
-            return false
-        }
-    }
 
-    
-// return a page full of the Survey.JS json that was built in the "surveys" Folder 
+// return a page full of the Survey.JS json that was built in the "surveys" Folder
     return (
         <>
             <h2>Would you like to use previous results to populate the questionnaire?</h2>

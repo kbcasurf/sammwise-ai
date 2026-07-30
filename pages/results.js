@@ -77,7 +77,7 @@ function setDatasetData(graphObj, dataNum, data) {
   );
 }
 
-const results = () => {
+const Results = () => {
 
     
     
@@ -505,4 +505,4 @@ const results = () => {
         );
 }
  
-export default results;
+export default Results;
