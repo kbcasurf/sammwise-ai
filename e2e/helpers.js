@@ -89,6 +89,30 @@ async function waitForPanelChange(page, previousName) {
   }, previousName);
 }
 
+async function completeFullAssessment(page) {
+  await startAssessment(page);
+  const domains = ['Governance', 'Design', 'Implementation', 'Verification', 'Operations'];
+  for (const domain of domains) {
+    const previousName = await firstRadioName(page);
+    await clickNavTab(page, domain);
+    await waitForPanelChange(page, previousName);
+    await answerAllVisibleRadios(page);
+    while (await page.getByRole('button', { name: 'Next Practice' }).count() > 0) {
+      const previousPracticeName = await firstRadioName(page);
+      await page.getByRole('button', { name: 'Next Practice' }).click();
+      await waitForPanelChange(page, previousPracticeName);
+      await answerAllVisibleRadios(page);
+    }
+  }
+  await clickNavTab(page, 'Details');
+  const textInputs = page.locator('input[type="text"]');
+  await textInputs.nth(0).fill('Acme Corp');
+  await textInputs.nth(1).fill('SAMM Rollout');
+  await textInputs.nth(2).fill('Automated E2E coverage run');
+  await page.getByRole('button', { name: 'Complete' }).click();
+  await expect(page).toHaveURL('/results');
+}
+
 module.exports = {
   startAssessment,
   clickNavTab,
@@ -96,4 +120,5 @@ module.exports = {
   getChartData,
   firstRadioName,
   waitForPanelChange,
+  completeFullAssessment,
 };
