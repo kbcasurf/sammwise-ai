@@ -17,6 +17,14 @@ RUN npm run build && npm install --production --ignore-scripts --prefer-offline
 FROM node:22-alpine AS runner
 WORKDIR /app
 
+# node:22-alpine ships an npm CLI whose own bundled dependencies (tar,
+# brace-expansion, picomatch, sigstore) have known HIGH/CRITICAL CVEs at
+# the time of writing -- unrelated to this app's dependency tree, but they
+# live under /usr/local/lib/node_modules/npm and still land in this image,
+# so the Trivy gate in .github/workflows/action.yml fails on them. Bumping
+# npm itself resolves them.
+RUN npm install -g npm@latest
+
 ENV NODE_ENV production
 
 RUN addgroup -g 1001 -S nodejs
