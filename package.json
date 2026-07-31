@@ -29,6 +29,7 @@
   },
   "//lodash": "lodash is not imported by this app directly. react-gauge-chart@0.5.1 does require('lodash/isEqual') but omits lodash from its own dependencies. Next 10's dependency tree supplied it by accident via react-chartjs-2@3.0.3's own transitive deps (dropped when react-chartjs-2 was bumped to 3.3.0 in this same task); Next 16's tree does not, so /results fails to build without it. Do not remove it as an unused dependency.",
   "//overrides": "These two chart libraries declare React peer ranges that stop at 16/17/18 (react-gauge-chart@0.5.1 is its latest release, and react-chartjs-2@3.0.3 is pinned below its 5.3.1 release because upgrading further would require an out-of-scope chart.js 3->4 major bump). Neither uses React's function-component defaultProps or any other API React 19 removed, so the incompatibility is in the declared range only. Overriding the peers (rather than setting legacy-peer-deps project-wide) keeps `npm ci` strict for every other dependency.",
+  "//overrides-security": "next@16.2.11/16.2.12 both vendor postcss@8.4.31 and sharp@0.34.5 as direct (non-peer) dependencies, with no newer 16.x patch available yet -- see GHSA-6g55-p6wh-862q/GHSA-r28c-9q8g-f849/GHSA-qx2v-qp2m-jg93 (postcss) and GHSA-f88m-g3jw-g9cj (sharp/libvips). Forcing patched versions here (same technique as the React peer overrides above) clears every production-facing finding from `npm audit --audit-level=high` without downgrading Next. Verified: npm run build/lint/test all pass, and a running `next start` correctly serves a resized image through /_next/image, confirming sharp still works at runtime post-override.",
   "overrides": {
     "react-chartjs-2": {
       "react": "$react"
@@ -36,7 +37,9 @@
     "react-gauge-chart": {
       "react": "$react",
       "react-dom": "$react-dom"
-    }
+    },
+    "postcss": "^8.5.25",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.0",
