@@ -61,12 +61,16 @@ additions:
   gaps per SAMM practice and recommends next steps, using a configurable AI provider
   (OpenAI-compatible or Anthropic). Requires explicit user consent per report and the
   `AI_PROVIDER_*` environment variables (see `example.env`).
-- **CI/CD pipeline.** GitHub Actions now runs linting (ESLint), unit tests (Jest),
-  end-to-end tests (Playwright), dependency vulnerability scanning (`npm audit`), secret
-  scanning (TruffleHog), and static analysis (CodeQL) on every pull request and push to
-  `main`, plus a weekly scheduled run. Docker images are scanned for HIGH/CRITICAL
-  vulnerabilities (Trivy) before being published, and Dependabot keeps npm, Docker, and
-  GitHub Actions dependencies up to date.
+- **CI/CD pipeline.** GitHub Actions runs linting (ESLint), unit tests (Jest),
+  end-to-end tests (Playwright), dependency vulnerability scanning (`npm audit`, production
+  dependencies only), secret scanning (TruffleHog), static application security testing
+  (CodeQL + Semgrep), and dynamic application security testing (OWASP ZAP Baseline against
+  an ephemeral instance of the app) on every pull request and push to `main`, plus a weekly
+  scheduled run. `npm audit`, Semgrep, ZAP, and CodeQL all fail the build on HIGH/CRITICAL
+  findings. Docker images are separately scanned (Trivy) and also fail the build on
+  HIGH/CRITICAL vulnerabilities before being published to the
+  [GitHub Container Registry](https://github.com/kbcasurf/sammwise-ai/pkgs/container/sammwise),
+  and Dependabot keeps npm, Docker, and GitHub Actions dependencies up to date.
 - **Bug fix: results charts.** The `/results` charts (business function, practice, and
   totals graphs) were silently rendering empty due to a stale Chart.js dataset
   reference — fixed, and now covered by e2e assertions on the actual rendered chart
@@ -74,11 +78,16 @@ additions:
 
 ## Getting Started
 
-The quickest way to get up and running is to pull down the image from dockerhub using the following commands:  
-`docker pull stephenmorgan/owasp-sammwise`  
-`docker run -p 3000:3000 stephenmorgan/owasp-sammwise`
+The quickest way to get up and running is to pull the published image from the
+[GitHub Container Registry](https://github.com/kbcasurf/sammwise-ai/pkgs/container/sammwise)
+using the following commands:  
+`docker pull ghcr.io/kbcasurf/sammwise:latest`  
+`docker run -p 3000:3000 ghcr.io/kbcasurf/sammwise:latest`
 
-Refer to the Build Options section below for how to build and run the application.
+This runs with an ephemeral, in-container SQLite database — assessment history is lost
+when the container is removed. See the Build Options section below for how to persist
+data with a volume, set the optional AI provider variables, or build the image yourself
+instead of pulling it.
 
 Both the docker and npm options will run the application on port 3000. The application can be accessed by navigation to http://localhost:3000 in your browser.
 
@@ -99,10 +108,29 @@ It is possible to save the results of your survey, the bottom of the results pag
 Changes to re-uploaded results will be visualised in the report graphs.
 
 ## Build Options
+### Docker (build & run locally)
+
+Requires Docker on the source system.
+
+Build the image from the repo root, using `docker/Dockerfile`:
+
+`docker build -f docker/Dockerfile -t sammwise:local .`
+
+Run it, mounting a named volume so the SQLite assessment history survives container
+restarts (the app writes to `/app/data` inside the container by default):
+
+`docker run -p 3000:3000 -v sammwise-data:/app/data sammwise:local`
+
+To enable the optional AI-powered Gap Analysis Report, pass the `AI_PROVIDER_*`
+variables from `example.env` as `-e` flags (e.g. `-e AI_PROVIDER_API_KEY=... -e
+AI_PROVIDER_API_URL=...`) — see the security note above before enabling it.
+
 ### Docker Compose (Recommended)
 
 Use the included docker-compose.yml file to quickly get up and running.
-Requires docker and docker-compose on the source system.
+Requires docker and docker-compose on the source system. Copy `example.env` to `.env`
+first if you want to set the optional `AI_PROVIDER_*` variables — docker-compose.yml
+reads them from the environment.
 
 `docker-compose up`
 
