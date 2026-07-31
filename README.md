@@ -8,6 +8,9 @@
     <img src="https://img.shields.io/badge/MADE%20BY-Datacom-blue.svg?style=for-the-badge&labelColor=white&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgMzAiPjxkZWZzLz48cGF0aCBkPSJNLjEuNWwuNCAxLjN2MjYuNGwtLjUuOWg5LjljNi45IDAgMTIuNy01LjYgMTIuNy0xNS4xQzIyLjYgNy4xIDE5LjIuOSAxMiAuNEwuMS41em01LjUgMi44aDMuMkMxMy42IDMuMyAxNyA2LjEgMTcgMTRjMCA5LjctNCAxMS43LTguNiAxMS43SDUuNlYzLjN6bTQ4LjktLjJoNi4xbC45LjcgMS0zLjJINDIuMkw0MS41IDRsMS42LS43aDUuOHYyNS4xbC0uNCAxaDYuNmwtLjQtMVYzLjFoLS4yem00NiAyMS40Yy0xLjUgMS44LTMuNCAyLjctNS41IDIuNy01LjIgMC04LTQuNi04LTExLjggMC02LjIgMi4yLTEyLjcgNy43LTEyLjcgMi4yIDAgNC4zIDEuMyA1LjUgMy43aC40VjIuMUM5OC43LjggOTYuOC4zIDk0LjUuM2MtNy4yIDAtMTMuMyA0LjktMTMuMyAxNS44IDAgOC42IDUuNSAxMy42IDEyLjUgMTMuNiAyLjIgMCA0LjYgMCA2LjYtMS4zdi00LjEuMnptMjYuOS05LjdjMC02LjUtMi44LTE0LjUtMTIuNC0xNC41LTguMyAwLTEzLjEgNi4zLTEzLjEgMTQuNiAwIDkuNCA1IDE0LjggMTIuNCAxNC44IDguMSAwIDEzLjEtNi43IDEzLjEtMTQuOW0tMTIuNi0xMmM1IDAgNi45IDUuOCA2LjkgMTEuMiAwIDYuOS0yLjIgMTMuMy03LjQgMTMuMy01IDAtNi45LTUuNi02LjktMTAuOS4xLTkuNyAyLjktMTMuNiA3LjQtMTMuNk0xNDQuMiAyMUwxMzUuOC41aC00LjZsLjQuOS0xLjkgMjYuNC0uNCAxLjNoMy41bDEuMy0xNy45IDggMTcuOWgxLjlsNy44LTE3LjcgMS41IDE3LjdoNi42bC0uNC0xLjJMMTU3IDEuMmwuMS0uN2gtNC42TDE0NC4yIDIxem0tMTA3LS4zbDIuOCA4LjZoNi41bC0uNy0uNy05LjktMjhoLTUuNmwuNiAxLjYtOS4yIDI2LjEtLjQuN2g0bDIuOC04LjZoOS4ydi4zem0tOC0zLjRsMy40LTEwIDMuNSAxMGgtNi45em00My45IDMuNGwyLjggOC42aDYuNWwtLjctLjlMNzEuNy41aC01LjZsLjYgMS42LTkuMiAyNi4xLS40LjdoNGwyLjgtOC42aDkuMnYuNHptLTguMi0zLjRsMy40LTEwIDMuNSAxMGgtNi45eiIgZmlsbD0iIzAwMjQ3MCIvPjwvc3ZnPgo=">
   </a>
   <img alt="" src="https://img.shields.io/azure-devops/build/datacomappsec/81cece92-c7e5-4254-9ddc-6783fe1e15b7/10?style=for-the-badge">
+  <a aria-label="CI" href="https://github.com/kbcasurf/sammwise-ai/actions/workflows/ci.yml">
+    <img alt="" src="https://img.shields.io/github/actions/workflow/status/kbcasurf/sammwise-ai/ci.yml?branch=main&style=for-the-badge&label=CI">
+  </a>
   <a aria-label="License" href="https://github.com/owaspsamm/sammwise/blob/main/LICENSE">
     <img alt="" src="https://img.shields.io/github/license/owaspsamm/sammwise?style=for-the-badge">
   </a>
@@ -38,6 +41,36 @@ SAMMwise is an open source Web App to calculate the Maturity score of an individ
 >   configured AI provider). Any visitor who can reach a deployment with this feature
 >   enabled can trigger unlimited billed provider calls. In any shared/public
 >   deployment, run it behind an authenticating proxy or add external rate limiting.
+
+## What's New in This Fork
+
+This fork ([kbcasurf/sammwise-ai](https://github.com/kbcasurf/sammwise-ai)) builds on
+upstream [OWASP SAMMwise](https://github.com/owaspsamm/sammwise) with the following
+additions:
+
+- **Modernized stack.** Upgraded from Next.js 10 / React 16 to Next.js 16 / React 19,
+  migrated the survey engine from the discontinued `survey-react` to `survey-core` +
+  `survey-react-ui`, removed dead/abandoned dependencies, and added an end-to-end test
+  suite (Playwright) as a regression safety net for the assessment flow.
+- **Assessment history.** Completed assessments can be saved to a local SQLite database,
+  listed and filtered by company/project on a new `/history` page, compared against each
+  other (trend chart over time), and deleted — alongside, not replacing, the existing
+  manual JSON download/upload flow.
+- **AI-powered Gap Analysis Report** (optional, disabled by default — see the security
+  note above). From `/results`, generate an advisory report that identifies maturity
+  gaps per SAMM practice and recommends next steps, using a configurable AI provider
+  (OpenAI-compatible or Anthropic). Requires explicit user consent per report and the
+  `AI_PROVIDER_*` environment variables (see `example.env`).
+- **CI/CD pipeline.** GitHub Actions now runs linting (ESLint), unit tests (Jest),
+  end-to-end tests (Playwright), dependency vulnerability scanning (`npm audit`), secret
+  scanning (TruffleHog), and static analysis (CodeQL) on every pull request and push to
+  `main`, plus a weekly scheduled run. Docker images are scanned for HIGH/CRITICAL
+  vulnerabilities (Trivy) before being published, and Dependabot keeps npm, Docker, and
+  GitHub Actions dependencies up to date.
+- **Bug fix: results charts.** The `/results` charts (business function, practice, and
+  totals graphs) were silently rendering empty due to a stale Chart.js dataset
+  reference — fixed, and now covered by e2e assertions on the actual rendered chart
+  data, not just canvas visibility.
 
 ## Getting Started
 
@@ -92,9 +125,17 @@ Then run the following depending on your use case:
 
 ### Testing
 
+Unit tests (Jest) can be run with:
+
+`npm test`
+
 End-to-end tests (Playwright) can be run with:
 
 `npm run test:e2e`
+
+Lint the codebase (ESLint) with:
+
+`npm run lint`
 
 ## Contribute
 
