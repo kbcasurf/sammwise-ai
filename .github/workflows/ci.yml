@@ -75,13 +75,13 @@ jobs:
             --config=p/react \
             --config=p/nextjs \
             --config=p/dockerfile \
-            --json-output=semgrep-results.json
+            --sarif-output=semgrep-results.sarif
       - name: Upload Semgrep report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: semgrep-results
-          path: semgrep-results.json
+          path: semgrep-results.sarif
 
   secrets-scan:
     runs-on: ubuntu-latest
