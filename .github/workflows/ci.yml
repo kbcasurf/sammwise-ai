@@ -60,6 +60,29 @@ jobs:
       - run: npm ci
       - run: npm audit --omit=dev --audit-level=high
 
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:1.172.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Semgrep (report-only)
+        run: |
+          semgrep scan \
+            --config=p/security-audit \
+            --config=p/javascript \
+            --config=p/typescript \
+            --config=p/react \
+            --config=p/nextjs \
+            --config=p/dockerfile \
+            --json-output=semgrep-results.json
+      - name: Upload Semgrep report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-results
+          path: semgrep-results.json
+
   secrets-scan:
     runs-on: ubuntu-latest
     steps:
