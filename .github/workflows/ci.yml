@@ -113,3 +113,33 @@ jobs:
         with:
           languages: javascript-typescript
       - uses: github/codeql-action/analyze@v3.37.2
+
+  dast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Start app in background
+        run: |
+          DATABASE_PATH=./data/sammwise.sqlite npm run start &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:3000 > /dev/null; then
+              echo "App is up after ${i} attempts"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "App did not respond within timeout" >&2
+          exit 1
+      - name: ZAP Baseline Scan (report-only)
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: 'http://127.0.0.1:3000'
+          fail_action: false
+          allow_issue_writing: false
+          artifact_name: 'zap-report'
