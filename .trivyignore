@@ -5,3 +5,19 @@
 # yet (checked 2026-07-31: npm@latest is 12.0.2, still bundles 5.0.7).
 # Remove this line once npm publishes a release with brace-expansion >= 5.0.8.
 CVE-2026-14257
+
+# CVE-2026-69152: same npm CLI bundled brace-expansion (5.0.7) as above, a
+# second CVE disclosed against the same unfixed version. Needs >= 1.1.18,
+# 2.1.4, 3.0.6, or 5.0.9. Same base-image constraint applies (checked
+# 2026-08-07: npm@latest is still 12.0.2, still bundles 5.0.7).
+# Remove this line once npm publishes a release with brace-expansion >= 5.0.9
+# (or the relevant fixed line).
+CVE-2026-69152
+
+# CVE-2026-69192: npm CLI's own bundled ip-address (10.2.0, pulled in via
+# usr/local/lib/node_modules/npm/node_modules/socks/node_modules/ip-address)
+# needs 10.3.1. Not in our application's dependency tree -- absent from
+# package-lock.json entirely. Same base-image constraint as above (checked
+# 2026-08-07: npm@latest is still 12.0.2, still bundles ip-address 10.2.0).
+# Remove this line once npm publishes a release with ip-address >= 10.3.1.
+CVE-2026-69192
