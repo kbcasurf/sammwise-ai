@@ -11,7 +11,15 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
-RUN npm run build && npm install --production --ignore-scripts --prefer-offline
+RUN npm run build && npm install --omit=dev --ignore-scripts --prefer-offline
+
+# next declares @playwright/test as an optional peer dependency, and this repo also
+# lists it in devDependencies (for our own e2e suite) -- npm's resolver marks that
+# shared node "devOptional", so --omit=dev alone does not prune it (verified: neither
+# does adding --omit=peer). --omit=optional would remove it too, but that also strips
+# sharp's platform-specific binaries (its optionalDependencies), breaking image
+# optimization at runtime. Removing the browser-automation package explicitly instead.
+RUN rm -rf node_modules/playwright node_modules/@playwright
 
 # Production image, copy all the files and run next
 FROM node:22-alpine AS runner
