@@ -94,12 +94,12 @@ jobs:
           fetch-depth: 0
       - name: TruffleHog (pull request diff scan)
         if: github.event_name == 'pull_request'
-        uses: trufflesecurity/trufflehog@v3.96.0
+        uses: trufflesecurity/trufflehog@v3.97.0
         with:
           extra_args: --results=verified,unknown
       - name: TruffleHog (full history scan)
         if: github.event_name != 'pull_request'
-        uses: trufflesecurity/trufflehog@v3.96.0
+        uses: trufflesecurity/trufflehog@v3.97.0
         with:
           base: ""
           head: ${{ github.ref_name }}
@@ -112,10 +112,10 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3.37.3
+      - uses: github/codeql-action/init@v3.37.7
         with:
           languages: javascript-typescript
-      - uses: github/codeql-action/analyze@v3.37.3
+      - uses: github/codeql-action/analyze@v3.37.7
 
       - name: Fail on open high/critical CodeQL findings
         env:
