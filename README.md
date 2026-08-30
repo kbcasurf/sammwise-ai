@@ -44,11 +44,11 @@ SAMMwise is an open source Web App to calculate the Maturity score of an individ
 >   enabled can trigger unlimited billed provider calls. In any shared/public
 >   deployment, run it behind an authenticating proxy or add external rate limiting.
 
-## What's New in This Fork
+## What's New in This Clone
 
-This fork ([kbcasurf/sammwise-ai](https://github.com/kbcasurf/sammwise-ai)) builds on
-upstream [OWASP SAMMwise](https://github.com/owaspsamm/sammwise) with the following
-additions:
+This repository ([kbcasurf/sammwise-ai](https://github.com/kbcasurf/sammwise-ai)) is an
+independently maintained clone of [OWASP SAMMwise](https://github.com/owaspsamm/sammwise),
+not a GitHub fork, with the following additions:
 
 - **Modernized stack.** Upgraded from Next.js 10 / React 16 to Next.js 16 / React 19,
   migrated the survey engine from the discontinued `survey-react` to `survey-core` +
