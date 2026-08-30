@@ -25,12 +25,19 @@ RUN rm -rf node_modules/playwright node_modules/@playwright
 FROM node:22-alpine AS runner
 WORKDIR /app
 
+# Pull in patched Alpine system packages (e.g. libcrypto3/libssl3) published
+# after this node:22-alpine layer was baked, so the Trivy gate in
+# .github/workflows/action.yml doesn't fail on OS CVEs that already have a
+# fix available upstream.
+RUN apk upgrade --no-cache
+
 # node:22-alpine ships an npm CLI whose own bundled dependencies (tar,
 # brace-expansion, picomatch, sigstore) have known HIGH/CRITICAL CVEs at
 # the time of writing -- unrelated to this app's dependency tree, but they
 # live under /usr/local/lib/node_modules/npm and still land in this image,
 # so the Trivy gate in .github/workflows/action.yml fails on them. Bumping
-# npm itself resolves them.
+# npm itself resolves most of them; any that persist because npm hasn't
+# published a release with the fix yet are tracked in .trivyignore.
 RUN npm install -g npm@latest
 
 ENV NODE_ENV production
