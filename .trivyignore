@@ -21,3 +21,11 @@ CVE-2026-69152
 # 2026-08-07: npm@latest is still 12.0.2, still bundles ip-address 10.2.0).
 # Remove this line once npm publishes a release with ip-address >= 10.3.1.
 CVE-2026-69192
+
+# CVE-2026-73566: npm CLI's own bundled tar (7.5.19, at
+# usr/local/lib/node_modules/npm/node_modules/tar) needs >= 7.5.21. Not in
+# our application's dependency tree -- our own package.json/package-lock.json
+# don't depend on tar directly or transitively. Same base-image constraint as
+# above (checked 2026-08-30: npm@latest is 12.0.2, still bundles tar 7.5.19).
+# Remove this line once npm publishes a release with tar >= 7.5.21.
+CVE-2026-73566
