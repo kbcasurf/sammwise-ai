@@ -112,10 +112,10 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3.37.7
+      - uses: github/codeql-action/init@v3.37.8
         with:
           languages: javascript-typescript
-      - uses: github/codeql-action/analyze@v3.37.7
+      - uses: github/codeql-action/analyze@v3.37.8
 
       - name: Fail on open high/critical CodeQL findings
         env:
